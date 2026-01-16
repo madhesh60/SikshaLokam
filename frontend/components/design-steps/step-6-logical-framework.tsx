@@ -8,7 +8,13 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useDemoStore, type ProjectData } from "@/lib/demo-store"
-import { Plus, Trash2, Table, RefreshCw } from "lucide-react"
+import { Plus, Trash2, Table, RefreshCw, BookOpen } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { MicButton } from "@/components/ui/mic-button"
 
 interface Props {
@@ -24,6 +30,118 @@ const defaultRow: LogframeRow = {
   mov: [""],
   assumptions: [""],
 }
+
+const COMMON_LFA_DATA = [
+  {
+    theme: "Foundational Literacy & Numeracy (FLN)",
+    challenge:
+      "Only 23.4% of Grade 3 students in government schools can read a Grade 2 level text, and only 27.6% can perform basic subtraction (ASER 2024). Many students are unable to meet foundational learning expectations (such as those envisioned in NIPUN Bharat) and continue to struggle in later grades due to weak early instruction and limited remedial support.",
+    outputs: [
+      {
+        narrative: "Students develop phonological awareness necessary for early reading.",
+        indicators: [
+          "Foundational Literacy. Percentage of students accurately identifying at least 80% of words beginning or ending with a given sound.",
+        ],
+      },
+      {
+        narrative: "Students are able to decode and read grade-appropriate texts fluently.",
+        indicators: [
+          "Percentage of students reading a Grade 2-level text with appropriate speed, accuracy, and expression.",
+        ],
+      },
+      {
+        narrative: "Students are able to comprehend grade-appropriate written text.",
+        indicators: [
+          "Percentage of students accurately answering at least 80% of comprehension questions based on a grade-level paragraph.",
+        ],
+      },
+      {
+        narrative: "Students are able to understand spoken language and follow meaning.",
+        indicators: [
+          "Percentage of students correctly identifying visuals corresponding to at least 80% of spoken sentences.",
+        ],
+      },
+      {
+        narrative: "Students are able to express ideas clearly through spoken language.",
+        indicators: [
+          "Percentage of students able to orally describe a picture or situation using complete and meaningful sentences.",
+        ],
+      },
+      {
+        narrative: "Students are able to express ideas clearly through basic writing.",
+        indicators: [
+          "Percentage of students able to write four meaningful sentences with correct structure and logical flow based on a given picture.",
+        ],
+      },
+      {
+        narrative: "Students develop strong number sense appropriate to their grade.",
+        indicators: [
+          "Percentage of students accurately reading and comparing at least 75% of multi-digit numbers (up to 3 digits for Grade 3; up to 4 digits for Grade 5).",
+        ],
+      },
+      {
+        narrative: "Students are able to perform grade-appropriate arithmetic operations.",
+        indicators: [
+          "Percentage of students accurately solving at least 75% of grade-appropriate arithmetic problems (addition, subtraction, multiplication, division).",
+        ],
+      },
+      {
+        narrative: "Students are able to apply numeracy to word problems.",
+        indicators: ["Percentage of students correctly solving grade-appropriate word problems."],
+      },
+      {
+        narrative: "Students understand basic measurement concepts.",
+        indicators: [
+          "Percentage of students correctly identifying and comparing units of time, weight, and length.",
+        ],
+      },
+      {
+        narrative: "Students demonstrate grade-appropriate mathematical reasoning.",
+        indicators: [
+          "Percentage of students able to explain the steps and logic used in solving grade-appropriate math problems.",
+        ],
+      },
+    ],
+  },
+  {
+    theme: "Career Readiness",
+    challenge:
+      "Only 47% of schools offer skill-based courses for Classes 9 and above, and only 29% of eligible students are enrolled in these courses (PARAKH, 2024). As a result, many adolescents have limited exposure to career guidance, life skills, and diverse pathways, leading to weak aspirations, poor transitions, and early exit or disengagement at the secondary stage.",
+    outputs: [
+      {
+        narrative: "Students demonstrate awareness of diverse education and career pathways.",
+        indicators: [
+          "Percentage of students able to identify and describe multiple education and career pathways.",
+        ],
+      },
+      {
+        narrative: "Students understand the link between education, skills, and career options.",
+        indicators: [
+          "Percentage of students able to explain how specific subjects or skills connect to different future options.",
+        ],
+      },
+      {
+        narrative:
+          "Students demonstrate life skills necessary for future success (e.g., critical thinking, communication, financial literacy, problem-solving).",
+        indicators: ["Percentage of students who can confidently articulate their career aspirations."],
+      },
+      {
+        narrative: "Students are able to make informed decisions and set realistic goals for their education and career.",
+        indicators: ["Percentage of students able to articulate a clear education or career goal."],
+      },
+      {
+        narrative: "Students are able to create a budget and track personal income/expenses.",
+        indicators: [
+          "Percentage of students who can create a financial budget and track personal income and expenses.",
+        ],
+      },
+      {
+        narrative: "Students demonstrate decision-making and goal-setting related to their future.",
+        indicators: ["Percentage of students able to articulate a clear education or career goal."],
+      },
+    ],
+  },
+]
 
 export function Step6LogicalFramework({ projectId }: Props) {
   const { projects, updateProjectData, updateProgress } = useDemoStore()
@@ -77,6 +195,33 @@ export function Step6LogicalFramework({ projectId }: Props) {
         timeline: "",
         responsible: "",
       })) || [{ narrative: "", inputs: [""], timeline: "", responsible: "" }],
+    }
+
+    setLogframe(newLogframe)
+    saveData(newLogframe)
+  }
+
+  const handleLoadTemplate = (template: (typeof COMMON_LFA_DATA)[0]) => {
+    const newLogframe: Logframe = {
+      goal: {
+        narrative: template.theme,
+        indicators: [""],
+        mov: [""],
+        assumptions: [""],
+      },
+      purpose: {
+        narrative: template.challenge,
+        indicators: [""],
+        mov: [""],
+        assumptions: [""],
+      },
+      outputs: template.outputs.map((output) => ({
+        narrative: output.narrative,
+        indicators: output.indicators,
+        mov: [""],
+        assumptions: [""],
+      })),
+      activities: [{ narrative: "", inputs: [""], timeline: "", responsible: "" }],
     }
 
     setLogframe(newLogframe)
@@ -295,6 +440,21 @@ export function Step6LogicalFramework({ projectId }: Props) {
               <RefreshCw className="mr-2 h-4 w-4" />
               Auto-populate from Results Chain
             </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <BookOpen className="mr-2 h-4 w-4" />
+                  Load Common LFA
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {COMMON_LFA_DATA.map((data, index) => (
+                  <DropdownMenuItem key={index} onClick={() => handleLoadTemplate(data)}>
+                    {data.theme}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </CardHeader>
         <CardContent>
