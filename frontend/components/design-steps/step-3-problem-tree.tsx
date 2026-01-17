@@ -91,26 +91,22 @@ export function Step3ProblemTree({ projectId }: Props) {
   const isComplete = centralProblem && causes.length >= 2 && effects.length >= 2
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Tips */}
       <Card className="bg-primary/5 border-primary/20">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
+        <CardHeader className="pb-2 pt-3 px-4">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Sparkles className="h-3 w-3 text-primary" />
             Problem Tree Guidance
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            The Problem Tree visualizes the cause-effect relationships. Place the central problem in the middle, root
-            causes below (the "roots"), and effects above (the "branches"). Ask "Why?" for causes and "So what?" for
-            effects.
-          </p>
+        <CardContent className="pb-3 px-4 text-xs text-muted-foreground">
+          The Problem Tree visualizes cause-effect relationships. Place the central problem in the middle, root causes below, and effects above.
         </CardContent>
       </Card>
 
       {/* Tree Visualization */}
-      <div className="space-y-6">
+      <div className="space-y-4">
         {/* Effects (Top) */}
         <Card>
           <CardHeader className="pb-3">

@@ -47,6 +47,10 @@ export interface ProjectData {
     interest: string
     influence: "high" | "medium" | "low"
     expectations: string
+    // Practice Mapping fields
+    currentPractice?: string
+    expectedPractice?: string
+    linkedOutcome?: string
   }>
   problemTree?: {
     centralProblem: string
@@ -81,6 +85,7 @@ export interface ProjectData {
       frequency: string
       source: string
       responsible: string
+      alignment?: string
     }>
     dataCollection: string
     reportingSchedule: string

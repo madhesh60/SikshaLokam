@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useDemoStore, type ProjectData } from "@/lib/demo-store"
-import { Plus, Trash2, BarChart3 } from "lucide-react"
+import { Plus, Trash2, BarChart3, Link as LinkIcon } from "lucide-react"
 import { MicButton } from "@/components/ui/mic-button"
 
 interface Props {
@@ -61,6 +61,7 @@ export function Step7MonitoringFramework({ projectId }: Props) {
       frequency: "quarterly",
       source: "",
       responsible: "",
+      alignment: "",
     }
     const updated = { ...monitoring, indicators: [...monitoring.indicators, newIndicator] }
     setMonitoring(updated)
@@ -114,6 +115,7 @@ export function Step7MonitoringFramework({ projectId }: Props) {
           </p>
         </CardContent>
       </Card>
+
 
       {/* Indicators */}
       <div className="space-y-4">
@@ -183,6 +185,45 @@ export function Step7MonitoringFramework({ projectId }: Props) {
                       </SelectContent>
                     </Select>
                   </div>
+                </div>
+
+                {/* Alignment Selection */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium flex items-center gap-2">
+                    <LinkIcon className="h-3.5 w-3.5" />
+                    Aligned To (Logframe & Outcomes)
+                  </label>
+                  <Select
+                    value={indicator.alignment || ""}
+                    onValueChange={(value) => updateIndicator(indicator.id, "alignment", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select what this indicator measures..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {project?.data.logframe?.goal?.narrative && (
+                        <SelectItem value="goal">Goal: {project.data.logframe.goal.narrative.substring(0, 50)}...</SelectItem>
+                      )}
+                      {project?.data.logframe?.purpose?.narrative && (
+                        <SelectItem value="purpose">
+                          Purpose: {project.data.logframe.purpose.narrative.substring(0, 50)}...
+                        </SelectItem>
+                      )}
+                      {project?.data.logframe?.outputs?.map((output, i) => (
+                        <SelectItem key={`output-${i}`} value={`output-${i}`}>
+                          Output {i + 1}: {output.narrative.substring(0, 50)}...
+                        </SelectItem>
+                      ))}
+                      {project?.data.stakeholders?.map((stakeholder, i) => (
+                        stakeholder.expectedPractice && (
+                          <SelectItem key={`stakeholder-${stakeholder.id}`} value={`stakeholder-${stakeholder.id}`}>
+                            Stakeholder Change: {stakeholder.name} ({stakeholder.expectedPractice.substring(0, 30)}...)
+                          </SelectItem>
+                        )
+                      ))}
+                      <SelectItem value="other">Other / General</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-4">
@@ -319,7 +360,7 @@ export function Step7MonitoringFramework({ projectId }: Props) {
           Complete Program Design
         </Button>
       </div>
-    </div>
+    </div >
   )
 }
 

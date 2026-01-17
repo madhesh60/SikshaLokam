@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useDemoStore, type ProjectData } from "@/lib/demo-store"
-import { Plus, Trash2, Users, Sparkles } from "lucide-react"
+import { Plus, Trash2, Users, Sparkles, ArrowRight, LayoutDashboard } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { MicButton } from "@/components/ui/mic-button"
 
 interface Props {
@@ -43,6 +44,7 @@ export function Step2StakeholderAnalysis({ projectId }: Props) {
   const project = projects.find((p) => p.id === projectId)
 
   const [stakeholders, setStakeholders] = useState<Stakeholder[]>([])
+  const [activeTab, setActiveTab] = useState("identification")
 
   useEffect(() => {
     if (project?.data.stakeholders) {
@@ -111,112 +113,203 @@ export function Step2StakeholderAnalysis({ projectId }: Props) {
             </CardContent>
           </Card>
         ) : (
-          stakeholders.map((stakeholder, index) => (
-            <Card key={stakeholder.id}>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base">Stakeholder {index + 1}</CardTitle>
-                  <Button variant="ghost" size="icon" onClick={() => handleRemoveStakeholder(stakeholder.id)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>Name / Group</Label>
-                    <div className="relative">
-                      <Input
-                        placeholder="e.g., Primary School Teachers"
-                        value={stakeholder.name}
-                        onChange={(e) => handleUpdateStakeholder(stakeholder.id, "name", e.target.value)}
-                        className="pr-10"
-                      />
-                      <div className="absolute right-2 top-1.5">
-                        <MicButton onTranscript={(text) => handleUpdateStakeholder(stakeholder.id, "name", text)} />
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="identification">1. Stakeholder Identification</TabsTrigger>
+              <TabsTrigger value="mapping">2. Practice & Outcome Mapping</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="identification" className="space-y-4">
+              {stakeholders.map((stakeholder, index) => (
+                <Card key={stakeholder.id}>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-base">Stakeholder {index + 1}</CardTitle>
+                      <Button variant="ghost" size="icon" onClick={() => handleRemoveStakeholder(stakeholder.id)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>Name / Group</Label>
+                        <div className="relative">
+                          <Input
+                            placeholder="e.g., Primary School Teachers"
+                            value={stakeholder.name}
+                            onChange={(e) => handleUpdateStakeholder(stakeholder.id, "name", e.target.value)}
+                            className="pr-10"
+                          />
+                          <div className="absolute right-2 top-1.5">
+                            <MicButton onTranscript={(text) => handleUpdateStakeholder(stakeholder.id, "name", text)} />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Stakeholder Type</Label>
+                        <Select
+                          value={stakeholder.type}
+                          onValueChange={(value) =>
+                            handleUpdateStakeholder(stakeholder.id, "type", value as Stakeholder["type"])
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {stakeholderTypes.map((type) => (
+                              <SelectItem key={type.value} value={type.value}>
+                                <div>
+                                  <div>{type.label}</div>
+                                  <div className="text-xs text-muted-foreground">{type.description}</div>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Stakeholder Type</Label>
-                    <Select
-                      value={stakeholder.type}
-                      onValueChange={(value) =>
-                        handleUpdateStakeholder(stakeholder.id, "type", value as Stakeholder["type"])
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {stakeholderTypes.map((type) => (
-                          <SelectItem key={type.value} value={type.value}>
-                            <div>
-                              <div>{type.label}</div>
-                              <div className="text-xs text-muted-foreground">{type.description}</div>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
 
-                <div className="space-y-2">
-                  <Label>Interest in the Program</Label>
-                  <div className="relative">
-                    <Textarea
-                      placeholder="What is this stakeholder's interest or stake in the program?"
-                      value={stakeholder.interest}
-                      onChange={(e) => handleUpdateStakeholder(stakeholder.id, "interest", e.target.value)}
-                      rows={2}
-                      className="pr-10"
-                    />
-                    <div className="absolute right-2 top-2">
-                      <MicButton onTranscript={(text) => handleUpdateStakeholder(stakeholder.id, "interest", text)} />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>Level of Influence</Label>
-                    <Select
-                      value={stakeholder.influence}
-                      onValueChange={(value) =>
-                        handleUpdateStakeholder(stakeholder.id, "influence", value as Stakeholder["influence"])
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {influenceLevels.map((level) => (
-                          <SelectItem key={level.value} value={level.value}>
-                            <Badge className={level.color}>{level.label}</Badge>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Expectations</Label>
-                    <div className="relative">
-                      <Input
-                        placeholder="What do they expect from the program?"
-                        value={stakeholder.expectations}
-                        onChange={(e) => handleUpdateStakeholder(stakeholder.id, "expectations", e.target.value)}
-                        className="pr-10"
-                      />
-                      <div className="absolute right-2 top-1.5">
-                        <MicButton onTranscript={(text) => handleUpdateStakeholder(stakeholder.id, "expectations", text)} />
+                    <div className="space-y-2">
+                      <Label>Interest in the Program</Label>
+                      <div className="relative">
+                        <Textarea
+                          placeholder="What is this stakeholder's interest or stake in the program?"
+                          value={stakeholder.interest}
+                          onChange={(e) => handleUpdateStakeholder(stakeholder.id, "interest", e.target.value)}
+                          rows={2}
+                          className="pr-10"
+                        />
+                        <div className="absolute right-2 top-2">
+                          <MicButton onTranscript={(text) => handleUpdateStakeholder(stakeholder.id, "interest", text)} />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))
+
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>Level of Influence</Label>
+                        <Select
+                          value={stakeholder.influence}
+                          onValueChange={(value) =>
+                            handleUpdateStakeholder(stakeholder.id, "influence", value as Stakeholder["influence"])
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {influenceLevels.map((level) => (
+                              <SelectItem key={level.value} value={level.value}>
+                                <Badge className={level.color}>{level.label}</Badge>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Expectations</Label>
+                        <div className="relative">
+                          <Input
+                            placeholder="What do they expect from the program?"
+                            value={stakeholder.expectations}
+                            onChange={(e) => handleUpdateStakeholder(stakeholder.id, "expectations", e.target.value)}
+                            className="pr-10"
+                          />
+                          <div className="absolute right-2 top-1.5">
+                            <MicButton onTranscript={(text) => handleUpdateStakeholder(stakeholder.id, "expectations", text)} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </TabsContent>
+
+            <TabsContent value="mapping" className="space-y-4">
+              <div className="bg-primary/5 p-4 rounded-lg flex items-center gap-2 text-sm text-primary mb-4">
+                <LayoutDashboard className="h-4 w-4" />
+                Map the behavior changes required from each stakeholder to achieve your program outcomes.
+              </div>
+              {stakeholders.map((stakeholder, index) => (
+                <Card key={stakeholder.id}>
+                  <CardHeader className="pb-3 bg-muted/30">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Users className="h-4 w-4 text-primary" />
+                      {stakeholder.name || `Stakeholder ${index + 1}`}
+                      <Badge variant="outline" className="ml-auto font-normal">
+                        {stakeholderTypes.find((t) => t.value === stakeholder.type)?.label}
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4 space-y-6">
+                    <div className="grid gap-4 md:grid-cols-[1fr_auto_1fr]">
+                      {/* Current Practice */}
+                      <div className="space-y-2">
+                        <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                          Current Practice / Behavior
+                        </Label>
+                        <div className="relative">
+                          <Textarea
+                            placeholder="What are they doing now?"
+                            value={stakeholder.currentPractice || ""}
+                            onChange={(e) => handleUpdateStakeholder(stakeholder.id, "currentPractice", e.target.value)}
+                            className="bg-red-50/50 border-red-100 focus-visible:ring-red-200 min-h-[80px]"
+                          />
+                          <div className="absolute right-2 top-2">
+                            <MicButton onTranscript={(text) => handleUpdateStakeholder(stakeholder.id, "currentPractice", text)} />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Arrow */}
+                      <div className="flex items-center justify-center pt-6">
+                        <ArrowRight className="h-6 w-6 text-muted-foreground" />
+                      </div>
+
+                      {/* Expected Practice */}
+                      <div className="space-y-2">
+                        <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                          Expected Practice Change
+                        </Label>
+                        <div className="relative">
+                          <Textarea
+                            placeholder="What should they do differently?"
+                            value={stakeholder.expectedPractice || ""}
+                            onChange={(e) => handleUpdateStakeholder(stakeholder.id, "expectedPractice", e.target.value)}
+                            className="bg-green-50/50 border-green-100 focus-visible:ring-green-200 min-h-[80px]"
+                          />
+                          <div className="absolute right-2 top-2">
+                            <MicButton onTranscript={(text) => handleUpdateStakeholder(stakeholder.id, "expectedPractice", text)} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Linked Outcome */}
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                        Linked Outcome <span className="text-muted-foreground/60 font-normal">(Why does this change matter?)</span>
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          placeholder="e.g., Leads to improved student literacy"
+                          value={stakeholder.linkedOutcome || ""}
+                          onChange={(e) => handleUpdateStakeholder(stakeholder.id, "linkedOutcome", e.target.value)}
+                          className="pr-10"
+                        />
+                        <div className="absolute right-2 top-1.5">
+                          <MicButton onTranscript={(text) => handleUpdateStakeholder(stakeholder.id, "linkedOutcome", text)} />
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </TabsContent>
+          </Tabs>
         )}
       </div>
 
@@ -234,7 +327,7 @@ export function Step2StakeholderAnalysis({ projectId }: Props) {
           </Button>
         </div>
       </div>
-    </div>
+    </div >
   )
 }
 

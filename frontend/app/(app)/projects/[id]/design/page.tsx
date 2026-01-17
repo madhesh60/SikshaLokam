@@ -118,41 +118,35 @@ export default function DesignPage() {
     <TooltipProvider>
       <div className="flex flex-col h-[calc(100vh-8rem)]">
         {/* Header */}
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => router.push("/projects")}>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2 gap-2">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={() => router.push("/projects")} className="h-8 w-8">
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div>
-              <h1 className="text-xl font-bold text-foreground">{project.name}</h1>
-              <p className="text-sm text-muted-foreground">{currentStepData?.description}</p>
+              <div className="flex items-center gap-2">
+                <h1 className="text-lg font-bold text-foreground leading-none">{project.name}</h1>
+                <Badge variant="outline" className="text-xs font-normal py-0 h-5">
+                  Step {currentStep}/7: {currentStepData?.name}
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{currentStepData?.description}</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <Badge variant="secondary" className="gap-1">
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="gap-1 h-7">
               <Sparkles className="h-3 w-3" />
               AI Enabled
             </Badge>
-            <Button variant="outline" size="sm" onClick={handleSave} disabled={isSaving}>
-              <Save className="mr-2 h-4 w-4" />
+            <Button variant="outline" size="sm" onClick={handleSave} disabled={isSaving} className="h-7 text-xs">
+              <Save className="mr-2 h-3 w-3" />
               {isSaving ? "Saving..." : "Save"}
             </Button>
           </div>
         </div>
 
-        {/* Progress Bar */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">
-              Step {currentStep} of 7: {currentStepData?.name}
-            </span>
-            <span className="text-sm text-muted-foreground">{Math.round((currentStep / 7) * 100)}% Complete</span>
-          </div>
-          <Progress value={(currentStep / 7) * 100} className="h-2" />
-        </div>
-
         {/* Step Navigation */}
-        <div className="flex items-center justify-center gap-1 mb-6 overflow-x-auto pb-2">
+        <div className="flex items-center justify-center gap-1 mb-2 overflow-x-auto pb-2">
           {LFA_STEPS.map((step, index) => {
             const Icon = iconMap[step.icon] || Target
             const isActive = step.id === currentStep
@@ -165,7 +159,7 @@ export default function DesignPage() {
                   <button
                     onClick={() => handleStepClick(step.id)}
                     disabled={!isAccessible}
-                    className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors min-w-[80px] ${isActive
+                    className={`flex flex-col items-center gap-1 p-1.5 rounded-lg transition-colors min-w-[60px] ${isActive
                       ? "bg-primary text-primary-foreground"
                       : isCompleted
                         ? "bg-primary/10 text-primary hover:bg-primary/20"
@@ -175,12 +169,14 @@ export default function DesignPage() {
                       }`}
                   >
                     <div className="relative">
-                      <Icon className="h-5 w-5" />
+                      <Icon className="h-4 w-4" />
                       {isCompleted && step.id < currentStep && (
-                        <CheckCircle2 className="absolute -top-1 -right-1 h-3 w-3 text-primary fill-primary-foreground" />
+                        <CheckCircle2 className="absolute -top-1 -right-1 h-2.5 w-2.5 text-primary fill-primary-foreground" />
                       )}
                     </div>
-                    <span className="text-xs font-medium hidden sm:block">{step.name}</span>
+                    <span className="text-[10px] font-medium hidden sm:block leading-tight text-center px-1 truncate w-full">
+                      {step.name}
+                    </span>
                     <span className="text-xs sm:hidden">{step.id}</span>
                   </button>
                 </TooltipTrigger>
@@ -194,7 +190,7 @@ export default function DesignPage() {
         </div>
 
         {/* Step Content */}
-        <div className="flex-1 overflow-y-auto rounded-lg border border-border bg-card p-6">
+        <div className="flex-1 overflow-y-auto rounded-lg border border-border bg-card p-4">
           <StepComponent projectId={projectId} />
         </div>
 
