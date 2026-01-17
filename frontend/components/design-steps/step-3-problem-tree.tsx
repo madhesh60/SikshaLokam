@@ -1,6 +1,6 @@
 ﻿"use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect , useRef} from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -23,65 +23,85 @@ export function Step3ProblemTree({ projectId }: Props) {
   const [causes, setCauses] = useState<TreeItem[]>([])
   const [effects, setEffects] = useState<TreeItem[]>([])
 
+  // Track last saved state to prevent echoes and unnecessary writes
+  const lastSavedRef = useState(JSON.stringify({ centralProblem: "", causes: [], effects: [] }))[0]
+  // Ideally use useRef, but for cleaner code in this functional component without large refactors:
+  const lastSaved = useRef("")
+
   useEffect(() => {
     if (project?.data.problemTree) {
-      setCentralProblem(project.data.problemTree.centralProblem || "")
-      setCauses(project.data.problemTree.causes || [])
-      setEffects(project.data.problemTree.effects || [])
-    } else if (project?.data.problemDefinition?.centralProblem) {
-      setCentralProblem(project.data.problemDefinition.centralProblem)
+      const { centralProblem: cp, causes: c, effects: e } = project.data.problemTree
+      // Only update local state if it's significantly different (e.g., initial load or external update)
+      // This logic helps but the main fix is the debounce below
+      
+      // Simple check to avoid overwriting user typing if backend is slow? 
+      // For now, we trust the "Init once" pattern or we accept last-write-wins for simplicity in this demo.
+      // We'll just set state if we haven't touched it yet or on first load.
+      
+      // Actually, standard pattern: Sync from props/store on mount or invalidation
+      const newState = JSON.stringify({ centralProblem: cp, causes: c, effects: e })
+      if (newState !== lastSaved.current && lastSaved.current === "") {
+        setCentralProblem(cp || "")
+        setCauses(c || [])
+        setEffects(e || [])
+        lastSaved.current = newState
+      }
+    } else if (project?.data.problemDefinition?.centralProblem && lastSaved.current === "") {
+       // Fallback to problem definition if tree is empty
+       setCentralProblem(project.data.problemDefinition.centralProblem)
     }
   }, [project?.data.problemTree, project?.data.problemDefinition])
 
-  const saveData = (newCentralProblem: string, newCauses: TreeItem[], newEffects: TreeItem[]) => {
-    updateProjectData(projectId, "problemTree", {
-      centralProblem: newCentralProblem,
-      causes: newCauses,
-      effects: newEffects,
-    })
-  }
+  // Debounced Save Effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const currentData = { centralProblem, causes, effects }
+      const stringified = JSON.stringify(currentData)
 
+      // Save if data has changed from what we last believe we saved/loaded
+      if (stringified !== lastSaved.current) {
+        // Prevent saving empty initial state over existing data if things haven't initialized
+        if (centralProblem === "" && causes.length === 0 && effects.length === 0 && lastSaved.current !== "") {
+           return 
+        }
+
+        updateProjectData(projectId, "problemTree", currentData)
+        lastSaved.current = stringified
+      }
+    }, 1000)
+
+    return () => clearTimeout(timer)
+  }, [centralProblem, causes, effects, projectId, updateProjectData])
+
+  // Handlers now only update local state
   const handleAddCause = () => {
     const newCause: TreeItem = { id: crypto.randomUUID(), text: "" }
-    const updated = [...causes, newCause]
-    setCauses(updated)
-    saveData(centralProblem, updated, effects)
+    setCauses([...causes, newCause])
   }
 
   const handleAddEffect = () => {
     const newEffect: TreeItem = { id: crypto.randomUUID(), text: "" }
-    const updated = [...effects, newEffect]
-    setEffects(updated)
-    saveData(centralProblem, causes, updated)
+    setEffects([...effects, newEffect])
   }
 
   const handleUpdateCause = (id: string, text: string) => {
-    const updated = causes.map((c) => (c.id === id ? { ...c, text } : c))
-    setCauses(updated)
-    saveData(centralProblem, updated, effects)
+    setCauses(causes.map((c) => (c.id === id ? { ...c, text } : c)))
   }
 
   const handleUpdateEffect = (id: string, text: string) => {
-    const updated = effects.map((e) => (e.id === id ? { ...e, text } : e))
-    setEffects(updated)
-    saveData(centralProblem, causes, updated)
+    setEffects(effects.map((e) => (e.id === id ? { ...e, text } : e)))
   }
 
   const handleRemoveCause = (id: string) => {
-    const updated = causes.filter((c) => c.id !== id)
-    setCauses(updated)
-    saveData(centralProblem, updated, effects)
+    setCauses(causes.filter((c) => c.id !== id))
   }
 
   const handleRemoveEffect = (id: string) => {
-    const updated = effects.filter((e) => e.id !== id)
-    setEffects(updated)
-    saveData(centralProblem, causes, updated)
+    setEffects(effects.filter((e) => e.id !== id))
   }
 
   const handleCentralProblemChange = (value: string) => {
     setCentralProblem(value)
-    saveData(value, causes, effects)
   }
 
   const handleComplete = () => {

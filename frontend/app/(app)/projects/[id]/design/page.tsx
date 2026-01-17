@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useRouter, useParams } from "next/navigation"
 import { useDemoStore, LFA_STEPS } from "@/lib/demo-store"
 import { Button } from "@/components/ui/button"
@@ -62,10 +62,20 @@ export default function DesignPage() {
 
   const project = projects.find((p) => p.id === projectId)
 
+  /* 
+   * Initialization Logic:
+   * We only want to set the current step from the project state ONCE when the project is first loaded.
+   * If we do this on every 'project' update, typing in a form (which updates 'project' via optimistic UI)
+   * will trigger this effect and force-reset the user to 'project.currentStep', jumping them away 
+   * if they navigated to a different step manually.
+   */
+  const initialized = useRef(false)
+
   useEffect(() => {
-    if (project) {
+    if (project && !initialized.current) {
       setCurrentProject(project)
       setCurrentStep(project.currentStep || 1)
+      initialized.current = true
     }
   }, [project, setCurrentProject])
 
