@@ -30,7 +30,16 @@ export const useSpeechRecognition = ({ onResult, lang = 'en-IN' }: UseSpeechReco
 
       recognition.onerror = (event: any) => {
         setIsListening(false);
-        setError(event.error);
+        let errorMessage = event.error;
+        if (event.error === 'network') {
+          errorMessage = 'Network error: speech recognition requires an internet connection.';
+        } else if (event.error === 'not-allowed') {
+          errorMessage = 'Microphone access denied. Please allow microphone access.';
+        } else if (event.error === 'no-speech') {
+          errorMessage = 'No speech detected. Please try again.';
+        }
+
+        setError(errorMessage);
         console.error('Speech recognition error', event.error);
       };
 
@@ -50,7 +59,7 @@ export const useSpeechRecognition = ({ onResult, lang = 'en-IN' }: UseSpeechReco
       setError('Browser does not support Speech Recognition.');
       return;
     }
-    
+
     if (!isListening) {
       try {
         recognitionRef.current.start();
