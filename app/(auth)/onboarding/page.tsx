@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -75,17 +75,16 @@ export default function OnboardingPage() {
   const { user, completeOnboarding, isOnboarded } = useDemoStore()
   const [currentStep, setCurrentStep] = useState(0)
 
-  // Redirect if not logged in
-  if (!user) {
-    router.push("/login")
-    return null
-  }
+  // Redirect logic
+  useEffect(() => {
+    if (!user) {
+      router.push("/login")
+    } else if (isOnboarded) {
+      router.push("/dashboard")
+    }
+  }, [user, isOnboarded, router])
 
-  // Redirect if already onboarded
-  if (isOnboarded) {
-    router.push("/dashboard")
-    return null
-  }
+  if (!user || isOnboarded) return null
 
   const progress = ((currentStep + 1) / onboardingSteps.length) * 100
   const step = onboardingSteps[currentStep]

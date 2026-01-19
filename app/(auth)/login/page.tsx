@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -14,6 +14,11 @@ import { Loader2, Eye, EyeOff } from "lucide-react"
 
 export default function LoginPage() {
   const router = useRouter()
+  useEffect(() => {
+    // Prefetch routes for smoother transitions
+    router.prefetch("/dashboard")
+    router.prefetch("/onboarding")
+  }, [router])
   const { login, user, isOnboarded } = useDemoStore()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -46,10 +51,14 @@ export default function LoginPage() {
   }
 
   // If already logged in, redirect
-  if (user) {
-    router.push(isOnboarded ? "/dashboard" : "/onboarding")
-    return null
-  }
+  // If already logged in, redirect
+  useEffect(() => {
+    if (user) {
+      router.push(isOnboarded ? "/dashboard" : "/onboarding")
+    }
+  }, [user, isOnboarded, router])
+
+  if (user) return null
 
   return (
     <Card className="w-full max-w-md border-border/50 shadow-lg">

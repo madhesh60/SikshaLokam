@@ -165,15 +165,14 @@ export default function DesignPage() {
                   <button
                     onClick={() => handleStepClick(step.id)}
                     disabled={!isAccessible}
-                    className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors min-w-[80px] ${
-                      isActive
+                    className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors min-w-[80px] ${isActive
                         ? "bg-primary text-primary-foreground"
                         : isCompleted
                           ? "bg-primary/10 text-primary hover:bg-primary/20"
                           : isAccessible
                             ? "hover:bg-muted text-muted-foreground"
                             : "text-muted-foreground/40 cursor-not-allowed"
-                    }`}
+                      }`}
                   >
                     <div className="relative">
                       <Icon className="h-5 w-5" />
@@ -196,7 +195,13 @@ export default function DesignPage() {
 
         {/* Step Content */}
         <div className="flex-1 overflow-y-auto rounded-lg border border-border bg-card p-6">
-          <StepComponent projectId={projectId} />
+          {StepComponent ? (
+            <StepComponent projectId={projectId} />
+          ) : (
+            <div className="p-4 text-center text-muted-foreground">
+              Component for step {currentStep} not found.
+            </div>
+          )}
         </div>
 
         {/* Navigation Footer */}

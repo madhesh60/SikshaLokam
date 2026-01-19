@@ -1,5 +1,7 @@
 "use client"
 
+import React from "react"
+
 import { usePathname } from "next/navigation"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
@@ -46,16 +48,16 @@ export function AppHeader() {
             const displayName = pathNames[segment] || (isDesignPage && currentProject ? currentProject.name : segment)
 
             return (
-              <BreadcrumbItem key={segment}>
-                {!isLast ? (
-                  <>
+              <React.Fragment key={segment}>
+                <BreadcrumbItem>
+                  {!isLast ? (
                     <BreadcrumbLink href={href}>{displayName}</BreadcrumbLink>
-                    <BreadcrumbSeparator />
-                  </>
-                ) : (
-                  <BreadcrumbPage>{displayName}</BreadcrumbPage>
-                )}
-              </BreadcrumbItem>
+                  ) : (
+                    <BreadcrumbPage>{displayName}</BreadcrumbPage>
+                  )}
+                </BreadcrumbItem>
+                {!isLast && <BreadcrumbSeparator />}
+              </React.Fragment>
             )
           })}
         </BreadcrumbList>

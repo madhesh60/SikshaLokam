@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useDemoStore, BADGES } from "@/lib/demo-store"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import confetti from "canvas-confetti"
 
@@ -37,6 +37,7 @@ export function BadgeNotification() {
   return (
     <Dialog open={!!showBadge} onOpenChange={() => setShowBadge(null)}>
       <DialogContent className="sm:max-w-md text-center">
+        <DialogTitle className="sr-only">Badge Earned: {showBadge.name}</DialogTitle>
         <div className="flex flex-col items-center py-6">
           <div className="text-6xl mb-4 animate-bounce">{showBadge.icon}</div>
           <h2 className="text-2xl font-bold text-foreground mb-2">Badge Earned!</h2>
