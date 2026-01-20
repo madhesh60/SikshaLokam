@@ -26,6 +26,9 @@ import {
   Link2,
   LayoutGrid,
   BarChart3,
+  BookOpen,
+  Loader2,
+  Sparkles,
 } from "lucide-react"
 import Link from "next/link"
 
@@ -160,6 +163,40 @@ export default function ReviewPage() {
       alert(`Failed to export: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setIsExporting(null)
+    }
+  }
+
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false)
+  const [reportContent, setReportContent] = useState<string | null>(null)
+
+  const handleGenerateReport = async () => {
+    setIsGeneratingReport(true)
+    try {
+      const response = await fetch("/api/generate-report", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ project }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to generate report")
+      }
+
+      const data = await response.json()
+      setReportContent(data.report)
+
+      // Scroll to report
+      setTimeout(() => {
+        document.getElementById("ai-report-section")?.scrollIntoView({ behavior: "smooth" })
+      }, 100)
+
+    } catch (error) {
+      console.error("Report Generation Error:", error)
+      alert("Failed to generate report. Please try again.")
+    } finally {
+      setIsGeneratingReport(false)
     }
   }
 
@@ -298,12 +335,49 @@ export default function ReviewPage() {
               <span className="text-xs text-muted-foreground">For data analysis</span>
               {isExporting === "xlsx" && <span className="text-xs">Generating...</span>}
             </Button>
+
+            <Button
+              variant="outline"
+              className="h-auto py-4 flex flex-col items-center gap-2 bg-purple-50 hover:bg-purple-100 border-purple-200"
+              onClick={handleGenerateReport}
+              disabled={isGeneratingReport}
+            >
+              {isGeneratingReport ? (
+                <Loader2 className="h-8 w-8 text-purple-600 animate-spin" />
+              ) : (
+                <Sparkles className="h-8 w-8 text-purple-600" />
+              )}
+              <span className="font-medium text-purple-900">AI Detailed Rulebook</span>
+              <span className="text-xs text-purple-700">Detailed Critique & Plan</span>
+            </Button>
           </div>
         </CardContent>
       </Card>
 
+      {reportContent && (
+        <Card id="ai-report-section" className="border-purple-200 shadow-md">
+          <CardHeader className="bg-purple-50/50 border-b border-purple-100">
+            <CardTitle className="flex items-center gap-2 text-purple-900">
+              <BookOpen className="h-5 w-5 text-purple-600" />
+              Project Analysis & Rulebook
+            </CardTitle>
+            <CardDescription className="text-purple-700">
+              AI-generated detailed critique and execution guide for {project.name}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="prose prose-purple max-w-none">
+              <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-foreground">
+                {reportContent}
+              </pre>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Framework Summary - Updated to use correct data structure */}
       <Card>
+
         <CardHeader>
           <CardTitle>Framework Summary</CardTitle>
           <CardDescription>Review all components of your logical framework</CardDescription>
