@@ -15,7 +15,6 @@ import {
   Download,
   FileText,
   FileSpreadsheet,
-  Presentation,
   ArrowLeft,
   Edit3,
   Share2,
@@ -71,187 +70,99 @@ export default function ReviewPage() {
   const completionPercentage = Math.round((completedSteps / totalSteps) * 100)
   const isComplete = completedSteps === totalSteps
 
+  // Share functionality
+  const handleShare = async () => {
+    const shareData = {
+      title: `LFA Review: ${project.name}`,
+      text: `Check out the Logical Framework Approach for ${project.name}`,
+      url: window.location.href,
+    }
+
+    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+      try {
+        await navigator.share(shareData)
+      } catch (err) {
+        console.error("Error sharing:", err)
+      }
+    } else {
+      // Fallback to clipboard
+      try {
+        await navigator.clipboard.writeText(window.location.href)
+        alert("Link copied to clipboard!")
+      } catch (err) {
+        console.error("Failed to copy link:", err)
+      }
+    }
+  }
+
   const handleExport = async (format: string) => {
     setIsExporting(format)
-    await new Promise((resolve) => setTimeout(resolve, 1500))
 
-    if (user && !user.badges?.includes("first-export")) {
-      earnBadge("first-export")
-    }
+    try {
+      // Get auth token from store user object, NOT localStorage directly
+      // The token is stored inside the persisted 'shiksha-raha-demo' state object
+      const token = user?.token
 
-    const exportContent = generateExportContent(project, format)
-    const blob = new Blob([exportContent], { type: "text/plain" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `${project.name.replace(/\s+/g, "-").toLowerCase()}-lfa.${format === "pdf" ? "txt" : format}`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-
-    setIsExporting(null)
-  }
-
-  const generateExportContent = (proj: typeof project, format: string) => {
-    const lines = [
-      "=".repeat(60),
-      `LOGICAL FRAMEWORK APPROACH - ${proj.name.toUpperCase()}`,
-      "=".repeat(60),
-      "",
-      `Organization: ${proj.organization}`,
-      `Created: ${new Date(proj.createdAt).toLocaleDateString()}`,
-      `Last Updated: ${new Date(proj.updatedAt).toLocaleDateString()}`,
-      `Completion: ${completionPercentage}%`,
-      "",
-      "-".repeat(60),
-      "STEP 1: PROBLEM DEFINITION",
-      "-".repeat(60),
-      "",
-      `Central Problem: ${proj.data.problemDefinition?.centralProblem || "Not defined"}`,
-      `Context: ${proj.data.problemDefinition?.context || "Not defined"}`,
-      `Target Beneficiaries: ${proj.data.problemDefinition?.targetBeneficiaries || "Not defined"}`,
-      `Geographic Scope: ${proj.data.problemDefinition?.geographicScope || "Not defined"}`,
-      "",
-      "-".repeat(60),
-      "STEP 2: STAKEHOLDER ANALYSIS",
-      "-".repeat(60),
-      "",
-    ]
-
-    if (proj.data.stakeholders?.length) {
-      proj.data.stakeholders.forEach((s, i) => {
-        lines.push(`${i + 1}. ${s.name} (${s.type})`)
-        lines.push(`   Interest: ${s.interest} | Influence: ${s.influence}`)
-        lines.push(`   Expectations: ${s.expectations || "N/A"}`)
-        lines.push("")
-      })
-    } else {
-      lines.push("No stakeholders defined")
-      lines.push("")
-    }
-
-    lines.push("-".repeat(60))
-    lines.push("STEP 3: PROBLEM TREE")
-    lines.push("-".repeat(60))
-    lines.push("")
-    lines.push(`Central Problem: ${proj.data.problemTree?.centralProblem || "Not defined"}`)
-
-    if (proj.data.problemTree?.causes?.length) {
-      lines.push("")
-      lines.push("Causes:")
-      proj.data.problemTree.causes.forEach((c, i) => {
-        lines.push(`  ${i + 1}. ${c.text}`)
-      })
-    }
-
-    if (proj.data.problemTree?.effects?.length) {
-      lines.push("")
-      lines.push("Effects:")
-      proj.data.problemTree.effects.forEach((e, i) => {
-        lines.push(`  ${i + 1}. ${e.text}`)
-      })
-    }
-
-    lines.push("")
-    lines.push("-".repeat(60))
-    lines.push("STEP 4: OBJECTIVE TREE")
-    lines.push("-".repeat(60))
-    lines.push("")
-    lines.push(`Main Objective: ${proj.data.objectiveTree?.centralObjective || "Not defined"}`)
-
-    if (proj.data.objectiveTree?.means?.length) {
-      lines.push("")
-      lines.push("Means:")
-      proj.data.objectiveTree.means.forEach((m, i) => {
-        lines.push(`  ${i + 1}. ${m.text}`)
-      })
-    }
-
-    if (proj.data.objectiveTree?.ends?.length) {
-      lines.push("")
-      lines.push("Ends:")
-      proj.data.objectiveTree.ends.forEach((e, i) => {
-        lines.push(`  ${i + 1}. ${e.text}`)
-      })
-    }
-
-    lines.push("")
-    lines.push("-".repeat(60))
-    lines.push("STEP 5: RESULTS CHAIN (THEORY OF CHANGE)")
-    lines.push("-".repeat(60))
-    lines.push("")
-
-    const chainElements = ["inputs", "activities", "outputs", "outcomes"] as const
-    chainElements.forEach((element) => {
-      const items = proj.data.resultsChain?.[element] || []
-      lines.push(`${element.charAt(0).toUpperCase() + element.slice(1)}:`)
-      if (items.length) {
-        items.forEach((item, i) => {
-          lines.push(`  ${i + 1}. ${item}`)
-        })
-      } else {
-        lines.push("  Not defined")
+      if (!token) {
+        console.warn("No auth token found in store")
+        alert('Please log in to export projects')
+        setIsExporting(null)
+        return
       }
-      lines.push("")
-    })
-    lines.push(`Impact: ${proj.data.resultsChain?.impact || "Not defined"}`)
 
-    lines.push("")
-    lines.push("-".repeat(60))
-    lines.push("STEP 6: LOGICAL FRAMEWORK MATRIX")
-    lines.push("-".repeat(60))
-    lines.push("")
+      // Call backend API
+      const response = await fetch(`http://127.0.0.1:5000/api/projects/${id}/export/${format}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
 
-    const logframe = proj.data.logframe
-    if (logframe) {
-      lines.push("Goal:")
-      lines.push(`  Narrative: ${logframe.goal?.narrative || "Not defined"}`)
-      lines.push(`  Indicators: ${logframe.goal?.indicators?.join(", ") || "Not defined"}`)
-      lines.push("")
-      lines.push("Purpose:")
-      lines.push(`  Narrative: ${logframe.purpose?.narrative || "Not defined"}`)
-      lines.push(`  Indicators: ${logframe.purpose?.indicators?.join(", ") || "Not defined"}`)
-      lines.push("")
-      lines.push("Outputs:")
-      logframe.outputs?.forEach((output, i) => {
-        lines.push(`  ${i + 1}. ${output.narrative}`)
-      })
-      lines.push("")
-      lines.push("Activities:")
-      logframe.activities?.forEach((activity, i) => {
-        lines.push(`  ${i + 1}. ${activity.narrative}`)
-      })
+      if (!response.ok) {
+        // Safely handle non-JSON errors (like HTML 404/500 pages)
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          const error = await response.json();
+          throw new Error(error.message || 'Export failed');
+        } else {
+          const text = await response.text();
+          console.error("Non-JSON error response:", text);
+          throw new Error(`Export failed with status ${response.status}`);
+        }
+      }
+
+      // Get the blob from response
+      const blob = await response.blob()
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+
+      // Set filename based on format
+      const fileName = `${project.name.replace(/\s+/g, '-').toLowerCase()}-lfa.${format}`
+      a.download = fileName
+
+      // Trigger download
+      document.body.appendChild(a)
+      a.click()
+
+      // Cleanup
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+
+      // Award badge if first export
+      if (user && !user.badges?.includes('first-export')) {
+        earnBadge('first-export')
+      }
+    } catch (error) {
+      console.error('Export error:', error)
+      alert(`Failed to export: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      setIsExporting(null)
     }
-
-    lines.push("")
-    lines.push("-".repeat(60))
-    lines.push("STEP 7: MONITORING FRAMEWORK")
-    lines.push("-".repeat(60))
-    lines.push("")
-
-    if (proj.data.monitoring?.indicators?.length) {
-      proj.data.monitoring.indicators.forEach((ind, i) => {
-        lines.push(`Indicator ${i + 1}: ${ind.name}`)
-        lines.push(`  Baseline: ${ind.baseline || "N/A"}`)
-        lines.push(`  Target: ${ind.target || "N/A"}`)
-        lines.push(`  Frequency: ${ind.frequency || "N/A"}`)
-        lines.push(`  Data Source: ${ind.source || "N/A"}`)
-        lines.push(`  Responsible: ${ind.responsible || "N/A"}`)
-        lines.push("")
-      })
-    } else {
-      lines.push("No indicators defined")
-    }
-
-    lines.push("")
-    lines.push("=".repeat(60))
-    lines.push("Generated by Shiksha Raha Common LFA Platform")
-    lines.push(`Export Date: ${new Date().toLocaleString()}`)
-    lines.push("=".repeat(60))
-
-    return lines.join("\n")
   }
+
 
   const getStepStatus = (stepNum: number) => {
     if (project.completedSteps?.includes(stepNum)) {
@@ -285,7 +196,7 @@ export default function ReviewPage() {
               Edit
             </Link>
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleShare}>
             <Share2 className="mr-2 h-4 w-4" />
             Share
           </Button>
@@ -353,7 +264,7 @@ export default function ReviewPage() {
           <CardDescription>Download your LFA in various formats for sharing and presentation</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <Button
               variant="outline"
               className="h-auto py-4 flex flex-col items-center gap-2 bg-transparent"
@@ -386,17 +297,6 @@ export default function ReviewPage() {
               <span className="font-medium">Excel Spreadsheet</span>
               <span className="text-xs text-muted-foreground">For data analysis</span>
               {isExporting === "xlsx" && <span className="text-xs">Generating...</span>}
-            </Button>
-            <Button
-              variant="outline"
-              className="h-auto py-4 flex flex-col items-center gap-2 bg-transparent"
-              onClick={() => handleExport("pptx")}
-              disabled={isExporting !== null}
-            >
-              <Presentation className="h-8 w-8 text-orange-500" />
-              <span className="font-medium">Presentation</span>
-              <span className="text-xs text-muted-foreground">For stakeholder meetings</span>
-              {isExporting === "pptx" && <span className="text-xs">Generating...</span>}
             </Button>
           </div>
         </CardContent>
