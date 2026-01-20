@@ -63,16 +63,21 @@ export function Step5ResultsChain({ projectId }: Props) {
     if (project?.data.resultsChain) {
       setResultsChain(project.data.resultsChain)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project?.data.resultsChain])
 
-  const saveData = (data: ResultsChain) => {
-    updateProjectData(projectId, "resultsChain", data)
-  }
+  // Debounced Save
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      // Sync to server
+      updateProjectData(projectId, "resultsChain", resultsChain)
+    }, 1000)
+    return () => clearTimeout(timer)
+  }, [resultsChain, projectId, updateProjectData])
 
   const handleAddItem = (key: keyof Omit<ResultsChain, "impact">) => {
     const updated = { ...resultsChain, [key]: [...resultsChain[key], ""] }
     setResultsChain(updated)
-    saveData(updated)
   }
 
   const handleUpdateItem = (key: keyof Omit<ResultsChain, "impact">, index: number, value: string) => {
@@ -81,7 +86,6 @@ export function Step5ResultsChain({ projectId }: Props) {
       [key]: resultsChain[key].map((item, i) => (i === index ? value : item)),
     }
     setResultsChain(updated)
-    saveData(updated)
   }
 
   const handleRemoveItem = (key: keyof Omit<ResultsChain, "impact">, index: number) => {
@@ -90,13 +94,22 @@ export function Step5ResultsChain({ projectId }: Props) {
       [key]: resultsChain[key].filter((_, i) => i !== index),
     }
     setResultsChain(updated)
-    saveData(updated)
   }
 
   const handleImpactChange = (value: string) => {
     const updated = { ...resultsChain, impact: value }
     setResultsChain(updated)
-    saveData(updated)
+  }
+
+  const handleVoice = (type: keyof ResultsChain, index: number | null, text: string) => {
+    if (type === "impact") {
+      const current = resultsChain.impact
+      handleImpactChange(current ? `${current} ${text}` : text)
+    } else if (index !== null) {
+      const list = resultsChain[type] as string[]
+      const current = list[index]
+      handleUpdateItem(type as keyof Omit<ResultsChain, "impact">, index, current ? `${current} ${text}` : text)
+    }
   }
 
   const handleComplete = () => {
@@ -166,7 +179,7 @@ export function Step5ResultsChain({ projectId }: Props) {
                           onChange={(e) => handleUpdateItem(step.key, index, e.target.value)}
                           className="flex-1 text-sm"
                         />
-                        <MicButton onTranscript={(text) => handleUpdateItem(step.key, index, text)} />
+                        <MicButton onTranscript={(text) => handleVoice(step.key, index, text)} />
                         <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(step.key, index)}>
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
@@ -206,7 +219,7 @@ export function Step5ResultsChain({ projectId }: Props) {
                   className="resize-none pr-10"
                 />
                 <div className="absolute right-2 top-2">
-                  <MicButton onTranscript={(text) => handleImpactChange(text)} />
+                  <MicButton onTranscript={(text) => handleVoice("impact", null, text)} />
                 </div>
               </div>
             </CardContent>

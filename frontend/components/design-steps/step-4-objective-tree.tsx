@@ -25,19 +25,30 @@ export function Step4ObjectiveTree({ projectId }: Props) {
 
   useEffect(() => {
     if (project?.data.objectiveTree) {
-      setCentralObjective(project.data.objectiveTree.centralObjective || "")
-      setMeans(project.data.objectiveTree.means || [])
-      setEnds(project.data.objectiveTree.ends || [])
+      const { centralObjective: co, means: m, ends: e } = project.data.objectiveTree
+      const currentState = { centralObjective, means, ends }
+      const serverState = { centralObjective: co || "", means: m || [], ends: e || [] }
+
+      if (JSON.stringify(currentState) !== JSON.stringify(serverState)) {
+        setCentralObjective(serverState.centralObjective)
+        setMeans(serverState.means)
+        setEnds(serverState.ends)
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project?.data.objectiveTree])
 
-  const saveData = (newCentralObjective: string, newMeans: TreeItem[], newEnds: TreeItem[]) => {
-    updateProjectData(projectId, "objectiveTree", {
-      centralObjective: newCentralObjective,
-      means: newMeans,
-      ends: newEnds,
-    })
-  }
+  // Debounced Save
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const currentData = { centralObjective, means, ends }
+      if (!centralObjective && means.length === 0 && ends.length === 0) {
+        // empty
+      }
+      updateProjectData(projectId, "objectiveTree", currentData)
+    }, 1000)
+    return () => clearTimeout(timer)
+  }, [centralObjective, means, ends, projectId, updateProjectData])
 
   // Transform problem tree to objective tree
   const handleTransformFromProblemTree = () => {
@@ -77,50 +88,62 @@ export function Step4ObjectiveTree({ projectId }: Props) {
     setCentralObjective(newCentralObjective)
     setMeans(newMeans)
     setEnds(newEnds)
-    saveData(newCentralObjective, newMeans, newEnds)
+    // Removed direct saveData, useEffect will pick it up
   }
 
   const handleAddMeans = () => {
     const newMeans: TreeItem = { id: crypto.randomUUID(), text: "" }
     const updated = [...means, newMeans]
     setMeans(updated)
-    saveData(centralObjective, updated, ends)
   }
 
   const handleAddEnds = () => {
     const newEnd: TreeItem = { id: crypto.randomUUID(), text: "" }
     const updated = [...ends, newEnd]
     setEnds(updated)
-    saveData(centralObjective, means, updated)
   }
 
   const handleUpdateMeans = (id: string, text: string) => {
     const updated = means.map((m) => (m.id === id ? { ...m, text } : m))
     setMeans(updated)
-    saveData(centralObjective, updated, ends)
   }
 
   const handleUpdateEnds = (id: string, text: string) => {
     const updated = ends.map((e) => (e.id === id ? { ...e, text } : e))
     setEnds(updated)
-    saveData(centralObjective, means, updated)
   }
 
   const handleRemoveMeans = (id: string) => {
     const updated = means.filter((m) => m.id !== id)
     setMeans(updated)
-    saveData(centralObjective, updated, ends)
   }
 
   const handleRemoveEnds = (id: string) => {
     const updated = ends.filter((e) => e.id !== id)
     setEnds(updated)
-    saveData(centralObjective, means, updated)
   }
 
   const handleCentralObjectiveChange = (value: string) => {
     setCentralObjective(value)
-    saveData(value, means, ends)
+  }
+
+  const handleVoice = (type: "central" | "means" | "ends", id: string | null, text: string) => {
+    if (type === "central") {
+      const current = centralObjective
+      setCentralObjective(current ? `${current} ${text}` : text)
+    } else if (type === "means" && id) {
+      const item = means.find(m => m.id === id)
+      if (item) {
+        const current = item.text
+        handleUpdateMeans(id, current ? `${current} ${text}` : text)
+      }
+    } else if (type === "ends" && id) {
+      const item = ends.find(e => e.id === id)
+      if (item) {
+        const current = item.text
+        handleUpdateEnds(id, current ? `${current} ${text}` : text)
+      }
+    }
   }
 
   const handleComplete = () => {
@@ -188,7 +211,7 @@ export function Step4ObjectiveTree({ projectId }: Props) {
                       onChange={(e) => handleUpdateEnds(end.id, e.target.value)}
                       className="flex-1"
                     />
-                    <MicButton onTranscript={(text) => handleUpdateEnds(end.id, text)} />
+                    <MicButton onTranscript={(text) => handleVoice("ends", end.id, text)} />
                     <Button variant="ghost" size="icon" onClick={() => handleRemoveEnds(end.id)}>
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
@@ -216,7 +239,7 @@ export function Step4ObjectiveTree({ projectId }: Props) {
                 placeholder="The main objective your program will achieve"
               />
               <div className="absolute right-2 top-1.5">
-                <MicButton onTranscript={(text) => handleCentralObjectiveChange(text)} />
+                <MicButton onTranscript={(text) => handleVoice("central", null, text)} />
               </div>
             </div>
           </CardContent>
@@ -252,7 +275,7 @@ export function Step4ObjectiveTree({ projectId }: Props) {
                       onChange={(e) => handleUpdateMeans(m.id, e.target.value)}
                       className="flex-1"
                     />
-                    <MicButton onTranscript={(text) => handleUpdateMeans(m.id, text)} />
+                    <MicButton onTranscript={(text) => handleVoice("means", m.id, text)} />
                     <Button variant="ghost" size="icon" onClick={() => handleRemoveMeans(m.id)}>
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>

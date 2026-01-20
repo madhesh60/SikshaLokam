@@ -160,10 +160,68 @@ export function Step6LogicalFramework({ projectId }: Props) {
     if (project?.data.logframe) {
       setLogframe(project.data.logframe)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project?.data.logframe])
 
-  const saveData = (data: Logframe) => {
-    updateProjectData(projectId, "logframe", data)
+  // Debounced Save
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      updateProjectData(projectId, "logframe", logframe)
+    }, 1000)
+    return () => clearTimeout(timer)
+  }, [logframe, projectId, updateProjectData])
+
+  // Helper for voice appending
+  const handleVoice = (
+    section: "level" | "output" | "activity", // level = goal/purpose
+    indexOrType: number | "goal" | "purpose",
+    field: string,
+    subIndex: number | null,
+    text: string
+  ) => {
+    if (section === "level") {
+      const type = indexOrType as "goal" | "purpose"
+      const currentObj = logframe[type]
+      if (subIndex !== null) {
+        // Array field
+        const list = currentObj[field as keyof LogframeRow] as string[]
+        const current = list[subIndex]
+        const newList = [...list]
+        newList[subIndex] = current ? `${current} ${text}` : text
+        updateRowField(type, field as keyof LogframeRow, newList)
+      } else {
+        // String field
+        const current = currentObj[field as keyof LogframeRow] as string
+        updateRowField(type, field as keyof LogframeRow, current ? `${current} ${text}` : text)
+      }
+    } else if (section === "output") {
+      const index = indexOrType as number
+      const currentObj = logframe.outputs[index]
+      if (subIndex !== null) {
+        const list = currentObj[field as keyof LogframeRow] as string[]
+        const current = list[subIndex]
+        const newList = [...list]
+        newList[subIndex] = current ? `${current} ${text}` : text
+        updateOutputField(index, field as keyof LogframeRow, newList)
+      } else {
+        const current = currentObj[field as keyof LogframeRow] as string
+        updateOutputField(index, field as keyof LogframeRow, current ? `${current} ${text}` : text)
+      }
+    } else if (section === "activity") {
+      const index = indexOrType as number
+      const currentObj = logframe.activities[index]
+      if (subIndex !== null) {
+        // inputs array
+        const list = currentObj.inputs
+        const current = list[subIndex]
+        const newList = [...list]
+        newList[subIndex] = current ? `${current} ${text}` : text
+        updateActivityField(index, "inputs", newList)
+      } else {
+        const current = currentObj[field as keyof typeof currentObj] as string
+        updateActivityField(index, field as keyof typeof currentObj, current ? `${current} ${text}` : text)
+      }
+    }
   }
 
   // Auto-populate from previous steps
@@ -198,7 +256,6 @@ export function Step6LogicalFramework({ projectId }: Props) {
     }
 
     setLogframe(newLogframe)
-    saveData(newLogframe)
   }
 
   const handleLoadTemplate = (template: (typeof COMMON_LFA_DATA)[0]) => {
@@ -225,7 +282,6 @@ export function Step6LogicalFramework({ projectId }: Props) {
     }
 
     setLogframe(newLogframe)
-    saveData(newLogframe)
   }
 
   const updateRowField = (level: "goal" | "purpose", field: keyof LogframeRow, value: string | string[]) => {
@@ -234,7 +290,6 @@ export function Step6LogicalFramework({ projectId }: Props) {
       [level]: { ...logframe[level], [field]: value },
     }
     setLogframe(updated)
-    saveData(updated)
   }
 
   const updateOutputField = (index: number, field: keyof LogframeRow, value: string | string[]) => {
@@ -243,7 +298,6 @@ export function Step6LogicalFramework({ projectId }: Props) {
       outputs: logframe.outputs.map((o, i) => (i === index ? { ...o, [field]: value } : o)),
     }
     setLogframe(updated)
-    saveData(updated)
   }
 
   const addOutput = () => {
@@ -252,7 +306,6 @@ export function Step6LogicalFramework({ projectId }: Props) {
       outputs: [...logframe.outputs, { ...defaultRow }],
     }
     setLogframe(updated)
-    saveData(updated)
   }
 
   const removeOutput = (index: number) => {
@@ -262,7 +315,6 @@ export function Step6LogicalFramework({ projectId }: Props) {
         outputs: logframe.outputs.filter((_, i) => i !== index),
       }
       setLogframe(updated)
-      saveData(updated)
     }
   }
 
@@ -276,7 +328,6 @@ export function Step6LogicalFramework({ projectId }: Props) {
       activities: logframe.activities.map((a, i) => (i === index ? { ...a, [field]: value } : a)),
     }
     setLogframe(updated)
-    saveData(updated)
   }
 
   const addActivity = () => {
@@ -285,7 +336,6 @@ export function Step6LogicalFramework({ projectId }: Props) {
       activities: [...logframe.activities, { narrative: "", inputs: [""], timeline: "", responsible: "" }],
     }
     setLogframe(updated)
-    saveData(updated)
   }
 
   const removeActivity = (index: number) => {
@@ -295,7 +345,6 @@ export function Step6LogicalFramework({ projectId }: Props) {
         activities: logframe.activities.filter((_, i) => i !== index),
       }
       setLogframe(updated)
-      saveData(updated)
     }
   }
 
@@ -323,7 +372,7 @@ export function Step6LogicalFramework({ projectId }: Props) {
               className="pr-10"
             />
             <div className="absolute right-2 top-2">
-              <MicButton onTranscript={(text) => updateRowField(level, "narrative", text)} />
+              <MicButton onTranscript={(text) => handleVoice("level", level, "narrative", null, text)} />
             </div>
           </div>
         </div>
@@ -343,11 +392,7 @@ export function Step6LogicalFramework({ projectId }: Props) {
                   className="pr-10"
                 />
                 <div className="absolute right-2 top-1.5">
-                  <MicButton onTranscript={(text) => {
-                    const newInds = [...logframe[level].indicators]
-                    newInds[i] = text
-                    updateRowField(level, "indicators", newInds)
-                  }} />
+                  <MicButton onTranscript={(text) => handleVoice("level", level, "indicators", i, text)} />
                 </div>
               </div>
             ))}
@@ -374,11 +419,7 @@ export function Step6LogicalFramework({ projectId }: Props) {
                   className="pr-10"
                 />
                 <div className="absolute right-2 top-1.5">
-                  <MicButton onTranscript={(text) => {
-                    const newMov = [...logframe[level].mov]
-                    newMov[i] = text
-                    updateRowField(level, "mov", newMov)
-                  }} />
+                  <MicButton onTranscript={(text) => handleVoice("level", level, "mov", i, text)} />
                 </div>
               </div>
             ))}
@@ -405,11 +446,7 @@ export function Step6LogicalFramework({ projectId }: Props) {
                   className="pr-10"
                 />
                 <div className="absolute right-2 top-1.5">
-                  <MicButton onTranscript={(text) => {
-                    const newAssump = [...logframe[level].assumptions]
-                    newAssump[i] = text
-                    updateRowField(level, "assumptions", newAssump)
-                  }} />
+                  <MicButton onTranscript={(text) => handleVoice("level", level, "assumptions", i, text)} />
                 </div>
               </div>
             ))}
@@ -517,7 +554,7 @@ export function Step6LogicalFramework({ projectId }: Props) {
                       className="pr-10"
                     />
                     <div className="absolute right-2 top-2">
-                      <MicButton onTranscript={(text) => updateOutputField(index, "narrative", text)} />
+                      <MicButton onTranscript={(text) => handleVoice("output", index, "narrative", null, text)} />
                     </div>
                   </div>
                 </div>
@@ -537,11 +574,7 @@ export function Step6LogicalFramework({ projectId }: Props) {
                           className="pr-10"
                         />
                         <div className="absolute right-2 top-1.5">
-                          <MicButton onTranscript={(text) => {
-                            const newInds = [...output.indicators]
-                            newInds[i] = text
-                            updateOutputField(index, "indicators", newInds)
-                          }} />
+                          <MicButton onTranscript={(text) => handleVoice("output", index, "indicators", i, text)} />
                         </div>
                       </div>
                     ))}
@@ -561,11 +594,7 @@ export function Step6LogicalFramework({ projectId }: Props) {
                           className="pr-10"
                         />
                         <div className="absolute right-2 top-1.5">
-                          <MicButton onTranscript={(text) => {
-                            const newMov = [...output.mov]
-                            newMov[i] = text
-                            updateOutputField(index, "mov", newMov)
-                          }} />
+                          <MicButton onTranscript={(text) => handleVoice("output", index, "mov", i, text)} />
                         </div>
                       </div>
                     ))}
@@ -585,11 +614,7 @@ export function Step6LogicalFramework({ projectId }: Props) {
                           className="pr-10"
                         />
                         <div className="absolute right-2 top-1.5">
-                          <MicButton onTranscript={(text) => {
-                            const newAssump = [...output.assumptions]
-                            newAssump[i] = text
-                            updateOutputField(index, "assumptions", newAssump)
-                          }} />
+                          <MicButton onTranscript={(text) => handleVoice("output", index, "assumptions", i, text)} />
                         </div>
                       </div>
                     ))}
@@ -628,7 +653,7 @@ export function Step6LogicalFramework({ projectId }: Props) {
                       className="pr-10"
                     />
                     <div className="absolute right-2 top-2">
-                      <MicButton onTranscript={(text) => updateActivityField(index, "narrative", text)} />
+                      <MicButton onTranscript={(text) => handleVoice("activity", index, "narrative", null, text)} />
                     </div>
                   </div>
                 </div>
@@ -648,11 +673,7 @@ export function Step6LogicalFramework({ projectId }: Props) {
                           className="pr-10"
                         />
                         <div className="absolute right-2 top-1.5">
-                          <MicButton onTranscript={(text) => {
-                            const newInputs = [...activity.inputs]
-                            newInputs[i] = text
-                            updateActivityField(index, "inputs", newInputs)
-                          }} />
+                          <MicButton onTranscript={(text) => handleVoice("activity", index, "inputs", i, text)} />
                         </div>
                       </div>
                     ))}
@@ -667,7 +688,7 @@ export function Step6LogicalFramework({ projectId }: Props) {
                         className="pr-10"
                       />
                       <div className="absolute right-2 top-1.5">
-                        <MicButton onTranscript={(text) => updateActivityField(index, "timeline", text)} />
+                        <MicButton onTranscript={(text) => handleVoice("activity", index, "timeline", null, text)} />
                       </div>
                     </div>
                   </div>
@@ -681,7 +702,7 @@ export function Step6LogicalFramework({ projectId }: Props) {
                         className="pr-10"
                       />
                       <div className="absolute right-2 top-1.5">
-                        <MicButton onTranscript={(text) => updateActivityField(index, "responsible", text)} />
+                        <MicButton onTranscript={(text) => handleVoice("activity", index, "responsible", null, text)} />
                       </div>
                     </div>
                   </div>

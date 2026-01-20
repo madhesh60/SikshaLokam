@@ -1,6 +1,6 @@
 ﻿"use client"
 
-import { useState, useEffect , useRef} from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -23,51 +23,35 @@ export function Step3ProblemTree({ projectId }: Props) {
   const [causes, setCauses] = useState<TreeItem[]>([])
   const [effects, setEffects] = useState<TreeItem[]>([])
 
-  // Track last saved state to prevent echoes and unnecessary writes
-  const lastSavedRef = useState(JSON.stringify({ centralProblem: "", causes: [], effects: [] }))[0]
-  // Ideally use useRef, but for cleaner code in this functional component without large refactors:
-  const lastSaved = useRef("")
-
   useEffect(() => {
     if (project?.data.problemTree) {
       const { centralProblem: cp, causes: c, effects: e } = project.data.problemTree
-      // Only update local state if it's significantly different (e.g., initial load or external update)
-      // This logic helps but the main fix is the debounce below
-      
-      // Simple check to avoid overwriting user typing if backend is slow? 
-      // For now, we trust the "Init once" pattern or we accept last-write-wins for simplicity in this demo.
-      // We'll just set state if we haven't touched it yet or on first load.
-      
-      // Actually, standard pattern: Sync from props/store on mount or invalidation
-      const newState = JSON.stringify({ centralProblem: cp, causes: c, effects: e })
-      if (newState !== lastSaved.current && lastSaved.current === "") {
-        setCentralProblem(cp || "")
-        setCauses(c || [])
-        setEffects(e || [])
-        lastSaved.current = newState
+      const currentState = { centralProblem, causes, effects }
+      const serverState = { centralProblem: cp || "", causes: c || [], effects: e || [] }
+
+      if (JSON.stringify(currentState) !== JSON.stringify(serverState)) {
+        setCentralProblem(serverState.centralProblem)
+        setCauses(serverState.causes)
+        setEffects(serverState.effects)
       }
-    } else if (project?.data.problemDefinition?.centralProblem && lastSaved.current === "") {
-       // Fallback to problem definition if tree is empty
-       setCentralProblem(project.data.problemDefinition.centralProblem)
+    } else if (project?.data.problemDefinition?.centralProblem && !centralProblem) {
+      // Fallback to problem definition if tree is empty and local state is empty
+      setCentralProblem(project.data.problemDefinition.centralProblem)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project?.data.problemTree, project?.data.problemDefinition])
 
   // Debounced Save Effect
   useEffect(() => {
     const timer = setTimeout(() => {
       const currentData = { centralProblem, causes, effects }
-      const stringified = JSON.stringify(currentData)
-
-      // Save if data has changed from what we last believe we saved/loaded
-      if (stringified !== lastSaved.current) {
-        // Prevent saving empty initial state over existing data if things haven't initialized
-        if (centralProblem === "" && causes.length === 0 && effects.length === 0 && lastSaved.current !== "") {
-           return 
-        }
-
-        updateProjectData(projectId, "problemTree", currentData)
-        lastSaved.current = stringified
+      // Prevent saving empty initial state over existing data if things haven't initialized
+      // (This is less critical with the prop-sync logic above, but good safeguard)
+      if (!centralProblem && causes.length === 0 && effects.length === 0) {
+        // If purely empty, maybe don't sync unless we know user cleared it.
+        // For now, let's sync if it's user driven.
       }
+      updateProjectData(projectId, "problemTree", currentData)
     }, 1000)
 
     return () => clearTimeout(timer)
@@ -102,6 +86,25 @@ export function Step3ProblemTree({ projectId }: Props) {
 
   const handleCentralProblemChange = (value: string) => {
     setCentralProblem(value)
+  }
+
+  const handleVoice = (type: "central" | "cause" | "effect", id: string | null, text: string) => {
+    if (type === "central") {
+      const current = centralProblem
+      setCentralProblem(current ? `${current} ${text}` : text)
+    } else if (type === "cause" && id) {
+      const item = causes.find(c => c.id === id)
+      if (item) {
+        const current = item.text
+        handleUpdateCause(id, current ? `${current} ${text}` : text)
+      }
+    } else if (type === "effect" && id) {
+      const item = effects.find(e => e.id === id)
+      if (item) {
+        const current = item.text
+        handleUpdateEffect(id, current ? `${current} ${text}` : text)
+      }
+    }
   }
 
   const handleComplete = () => {
@@ -159,7 +162,7 @@ export function Step3ProblemTree({ projectId }: Props) {
                       onChange={(e) => handleUpdateEffect(effect.id, e.target.value)}
                       className="flex-1"
                     />
-                    <MicButton onTranscript={(text) => handleUpdateEffect(effect.id, text)} />
+                    <MicButton onTranscript={(text) => handleVoice("effect", effect.id, text)} />
                     <Button variant="ghost" size="icon" onClick={() => handleRemoveEffect(effect.id)}>
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
@@ -187,7 +190,7 @@ export function Step3ProblemTree({ projectId }: Props) {
                 placeholder="The main problem your program addresses"
               />
               <div className="absolute right-2 top-1.5">
-                <MicButton onTranscript={(text) => handleCentralProblemChange(text)} />
+                <MicButton onTranscript={(text) => handleVoice("central", null, text)} />
               </div>
             </div>
           </CardContent>
@@ -225,7 +228,7 @@ export function Step3ProblemTree({ projectId }: Props) {
                       onChange={(e) => handleUpdateCause(cause.id, e.target.value)}
                       className="flex-1"
                     />
-                    <MicButton onTranscript={(text) => handleUpdateCause(cause.id, text)} />
+                    <MicButton onTranscript={(text) => handleVoice("cause", cause.id, text)} />
                     <Button variant="ghost" size="icon" onClick={() => handleRemoveCause(cause.id)}>
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>

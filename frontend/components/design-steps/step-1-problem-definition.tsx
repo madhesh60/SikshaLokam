@@ -36,14 +36,34 @@ export function Step1ProblemDefinition({ projectId }: Props) {
 
   useEffect(() => {
     if (project?.data.problemDefinition) {
-      setFormData(project.data.problemDefinition)
+      // Only update if significantly different to avoid cursor jumps
+      // For simplicity, we just sync. The debounce below prevents the loop.
+      const serverData = project.data.problemDefinition
+      if (JSON.stringify(serverData) !== JSON.stringify(formData)) {
+        setFormData(serverData)
+      }
     }
+    // We intentionally omit formData from deps here to prevent infinite loop
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project?.data.problemDefinition])
+
+  // Debounced save
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      updateProjectData(projectId, "problemDefinition", formData)
+    }, 1000)
+    return () => clearTimeout(timer)
+  }, [formData, projectId, updateProjectData])
 
   const handleChange = (field: keyof typeof formData, value: string) => {
     const updated = { ...formData, [field]: value }
     setFormData(updated)
-    updateProjectData(projectId, "problemDefinition", updated)
+  }
+
+  const handleVoice = (field: keyof typeof formData, text: string) => {
+    const current = formData[field] || ""
+    const newValue = current ? `${current} ${text}` : text
+    handleChange(field, newValue)
   }
 
   const handleComplete = () => {
@@ -95,7 +115,7 @@ export function Step1ProblemDefinition({ projectId }: Props) {
                 className="resize-none pr-10"
               />
               <div className="absolute right-2 top-2">
-                <MicButton onTranscript={(text) => handleChange("centralProblem", text)} />
+                <MicButton onTranscript={(text) => handleVoice("centralProblem", text)} />
               </div>
             </div>
           </CardContent>
@@ -118,7 +138,7 @@ export function Step1ProblemDefinition({ projectId }: Props) {
                 className="resize-none pr-10"
               />
               <div className="absolute right-2 top-2">
-                <MicButton onTranscript={(text) => handleChange("context", text)} />
+                <MicButton onTranscript={(text) => handleVoice("context", text)} />
               </div>
             </div>
           </CardContent>
@@ -140,7 +160,7 @@ export function Step1ProblemDefinition({ projectId }: Props) {
                   className="resize-none pr-10"
                 />
                 <div className="absolute right-2 top-2">
-                  <MicButton onTranscript={(text) => handleChange("targetBeneficiaries", text)} />
+                  <MicButton onTranscript={(text) => handleVoice("targetBeneficiaries", text)} />
                 </div>
               </div>
             </CardContent>
@@ -160,7 +180,7 @@ export function Step1ProblemDefinition({ projectId }: Props) {
                   className="pr-10"
                 />
                 <div className="absolute right-2 top-1.5">
-                  <MicButton onTranscript={(text) => handleChange("geographicScope", text)} />
+                  <MicButton onTranscript={(text) => handleVoice("geographicScope", text)} />
                 </div>
               </div>
               <div className="space-y-2">
