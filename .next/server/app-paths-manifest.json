@@ -1,0 +1,16 @@
+{
+  "/(app)/achievements/page": "app/(app)/achievements/page.js",
+  "/(app)/dashboard/page": "app/(app)/dashboard/page.js",
+  "/(app)/help/page": "app/(app)/help/page.js",
+  "/(app)/projects/[id]/design/page": "app/(app)/projects/[id]/design/page.js",
+  "/(app)/projects/[id]/review/page": "app/(app)/projects/[id]/review/page.js",
+  "/(app)/projects/page": "app/(app)/projects/page.js",
+  "/(app)/settings/page": "app/(app)/settings/page.js",
+  "/(app)/templates/page": "app/(app)/templates/page.js",
+  "/(auth)/login/page": "app/(auth)/login/page.js",
+  "/(auth)/onboarding/page": "app/(auth)/onboarding/page.js",
+  "/(auth)/register/page": "app/(auth)/register/page.js",
+  "/_global-error/page": "app/_global-error/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/page": "app/page.js"
+}

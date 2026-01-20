@@ -1,0 +1,3 @@
+module.exports=[94277,(a,b,c)=>{let{createClientModuleProxy:d}=a.r(86884);a.n(d("[project]/Shiksha-logam/SikshaLokam/node_modules/next/dist/client/components/builtin/global-error.js <module evaluation>"))},62472,(a,b,c)=>{let{createClientModuleProxy:d}=a.r(86884);a.n(d("[project]/Shiksha-logam/SikshaLokam/node_modules/next/dist/client/components/builtin/global-error.js"))},25232,a=>{"use strict";a.i(94277);var b=a.i(62472);a.n(b)}];
+
+//# sourceMappingURL=ba4a2_next_dist_client_components_builtin_global-error_368c9ea8.js.map

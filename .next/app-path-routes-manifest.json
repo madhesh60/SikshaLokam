@@ -1,0 +1,16 @@
+{
+  "/(app)/achievements/page": "/achievements",
+  "/(app)/dashboard/page": "/dashboard",
+  "/(app)/help/page": "/help",
+  "/(app)/projects/[id]/design/page": "/projects/[id]/design",
+  "/(app)/projects/[id]/review/page": "/projects/[id]/review",
+  "/(app)/projects/page": "/projects",
+  "/(app)/settings/page": "/settings",
+  "/(app)/templates/page": "/templates",
+  "/(auth)/login/page": "/login",
+  "/(auth)/onboarding/page": "/onboarding",
+  "/(auth)/register/page": "/register",
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/page": "/"
+}

@@ -1,0 +1,1 @@
+{"version":3,"sources":["../../../../../../Shiksha-logam/SikshaLokam/app/%28auth%29/onboarding/loading.tsx"],"sourcesContent":["export default function Loading() {\r\n  return null\r\n}\r\n"],"names":[],"mappings":"sCAAe,SAAS,IACtB,OAAO,IACT"}
