@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useRouter, useParams } from "next/navigation"
 import { useDemoStore } from "@/lib/demo-store"
 import { Button } from "@/components/ui/button"
+import ReactMarkdown from "react-markdown"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -335,41 +336,173 @@ export default function ReviewPage() {
               <span className="text-xs text-muted-foreground">For data analysis</span>
               {isExporting === "xlsx" && <span className="text-xs">Generating...</span>}
             </Button>
-
-            <Button
-              variant="outline"
-              className="h-auto py-4 flex flex-col items-center gap-2 bg-purple-50 hover:bg-purple-100 border-purple-200"
-              onClick={handleGenerateReport}
-              disabled={isGeneratingReport}
-            >
-              {isGeneratingReport ? (
-                <Loader2 className="h-8 w-8 text-purple-600 animate-spin" />
-              ) : (
-                <Sparkles className="h-8 w-8 text-purple-600" />
-              )}
-              <span className="font-medium text-purple-900">AI Detailed Rulebook</span>
-              <span className="text-xs text-purple-700">Detailed Critique & Plan</span>
-            </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* AI Rulebook Generator (Full Width) */}
+      <Card className="border-purple-200 bg-purple-50/30">
+        <CardContent className="pt-6">
+          <Button
+            variant="outline"
+            className="w-full h-auto py-6 flex flex-col items-center gap-2 bg-white hover:bg-purple-50 border-purple-200 shadow-sm transition-all"
+            onClick={handleGenerateReport}
+            disabled={isGeneratingReport}
+          >
+            {isGeneratingReport ? (
+              <Loader2 className="h-8 w-8 text-purple-600 animate-spin" />
+            ) : (
+              <Sparkles className="h-8 w-8 text-purple-600" />
+            )}
+            <div className="text-center">
+              <span className="block text-lg font-semibold text-purple-900">Generate AI Detailed Rulebook</span>
+              <span className="block text-sm text-purple-700 mt-1">Get a comprehensive analysis, critique, execution guide, and resources for your project</span>
+            </div>
+          </Button>
         </CardContent>
       </Card>
 
       {reportContent && (
         <Card id="ai-report-section" className="border-purple-200 shadow-md">
-          <CardHeader className="bg-purple-50/50 border-b border-purple-100">
-            <CardTitle className="flex items-center gap-2 text-purple-900">
-              <BookOpen className="h-5 w-5 text-purple-600" />
-              Project Analysis & Rulebook
-            </CardTitle>
-            <CardDescription className="text-purple-700">
-              AI-generated detailed critique and execution guide for {project.name}
-            </CardDescription>
+          <CardHeader className="bg-purple-50/50 border-b border-purple-100 flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-purple-900">
+                <BookOpen className="h-5 w-5 text-purple-600" />
+                Project Analysis & Rulebook
+              </CardTitle>
+              <CardDescription className="text-purple-700 mt-1">
+                AI-generated detailed critique and execution guide for {project.name}
+              </CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 border-purple-200 text-purple-700 hover:bg-purple-100"
+              onClick={async () => {
+                try {
+                  const htmlContent = `
+                                <!DOCTYPE html>
+                                <html>
+                                <head>
+                                    <title>${project.name} - Rulebook</title>
+                                    <style>
+                                        body { font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 40px; color: #1f2937; background: #fff; }
+                                        h1 { color: #581c87; border-bottom: 2px solid #581c87; padding-bottom: 10px; margin-top: 0; }
+                                        h2 { color: #6b21a8; margin-top: 30px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; }
+                                        h3 { color: #7e22ce; margin-top: 25px; }
+                                        strong { color: #4c1d95; }
+                                        blockquote { border-left: 4px solid #d8b4fe; background: #faf5ff; padding: 15px; margin: 20px 0; color: #581c87; font-style: italic; border-radius: 4px; }
+                                        code { background: #f3f4f6; padding: 2px 5px; border-radius: 4px; color: #db2777; font-family: monospace; font-size: 0.9em; }
+                                        pre { background: #1f2937; color: #f3f4f6; padding: 15px; border-radius: 8px; overflow-x: auto; margin: 15px 0; }
+                                        pre code { background: transparent; padding: 0; color: inherit; }
+                                        ul, ol { padding-left: 20px; }
+                                        li { margin-bottom: 6px; }
+                                        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                                        th { background: #f3f4f6; text-align: left; padding: 10px; border: 1px solid #e5e7eb; color: #1f2937; }
+                                        td { padding: 10px; border: 1px solid #e5e7eb; }
+                                        a { color: #7e22ce; text-decoration: underline; }
+                                        .footer { margin-top: 50px; font-size: 12px; color: #6b7280; text-align: center; border-top: 1px solid #e5e7eb; padding-top: 20px; }
+                                    </style>
+                                </head>
+                                <body>
+                                    <div id="content">
+                                        ${reportContent}
+                                    </div>
+                                    <div class="footer">
+                                        Generated by Shiksha Raha AI - ${new Date().toLocaleDateString()}
+                                    </div>
+                                    
+                                    <!-- Markdown Parser for viewing -->
+                                    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+                                    <script>
+                                        document.getElementById('content').innerHTML = marked.parse(document.getElementById('content').innerText);
+                                    </script>
+                                </body>
+                                </html>
+                            `
+
+                  const blob = new Blob([htmlContent], { type: 'text/html' })
+                  const url = URL.createObjectURL(blob)
+                  const a = document.createElement('a')
+                  a.href = url
+                  a.download = `${project.name.replace(/\s+/g, '-').toLowerCase()}-rulebook.html`
+                  document.body.appendChild(a)
+                  a.click()
+                  document.body.removeChild(a)
+                  window.URL.revokeObjectURL(url)
+                } catch (error) {
+                  console.error("Export Error:", error)
+                  alert("Failed to download report. Please try again.")
+                }
+              }}
+            >
+              <Download className="h-4 w-4" />
+              Download HTML Report
+            </Button>
           </CardHeader>
           <CardContent className="pt-6">
-            <div className="prose prose-purple max-w-none">
-              <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-foreground">
-                {reportContent}
-              </pre>
+            {/* 
+                  CRITICAL: This container MUST NOT use any Tailwind classes (e.g. bg-white, border-gray-200).
+                  Tailwind classes resolve to CSS variables using 'oklch()' or 'lab()' colors in globals.css.
+                  html2canvas crashes when it encounters these modern color functions.
+                  We must use PURE INLINE CSS with HEX/RGB values only.
+                */}
+            <div
+              id="ai-report-content"
+              style={{
+                backgroundColor: '#ffffff',
+                color: '#1f2937',
+                padding: '40px',
+                borderRadius: '8px',
+                border: '1px solid #e5e7eb',
+                boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                fontFamily: 'sans-serif',
+                fontSize: '14px',
+                lineHeight: '1.6',
+                // SAFE VARIABLE OVERRIDES
+                // @ts-ignore
+                '--background': '#ffffff',
+                '--foreground': '#1f2937',
+                '--card': '#ffffff',
+                '--card-foreground': '#1f2937',
+                '--popover': '#ffffff',
+                '--popover-foreground': '#1f2937',
+                '--primary': '#581c87',
+                '--primary-foreground': '#ffffff',
+                '--secondary': '#f3f4f6',
+                '--secondary-foreground': '#1f2937',
+                '--muted': '#f3f4f6',
+                '--muted-foreground': '#6b7280',
+                '--accent': '#f3f4f6',
+                '--accent-foreground': '#1f2937',
+                '--destructive': '#ef4444',
+                '--destructive-foreground': '#ffffff',
+                '--border': '#e5e7eb',
+                '--input': '#e5e7eb',
+                '--ring': '#581c87',
+                '--radius': '0.5rem',
+              } as React.CSSProperties}
+            >
+              <style jsx global>{`
+                        /* Force all children to use simple safe colors */
+                        #ai-report-content > * { margin-bottom: 1em; }
+                        #ai-report-content h1 { color: #581c87; font-size: 24px; font-weight: 700; border-bottom: 2px solid #581c87; padding-bottom: 8px; margin-top: 0; }
+                        #ai-report-content h2 { color: #6b21a8; font-size: 20px; font-weight: 600; margin-top: 24px; margin-bottom: 12px; }
+                        #ai-report-content h3 { color: #7e22ce; font-size: 18px; font-weight: 600; margin-top: 20px; }
+                        #ai-report-content strong { color: #4c1d95; font-weight: 600; }
+                        #ai-report-content ul { padding-left: 24px; list-style-type: disc; }
+                        #ai-report-content ol { padding-left: 24px; list-style-type: decimal; }
+                        #ai-report-content li { margin-bottom: 4px; }
+                        #ai-report-content a { color: #7e22ce; text-decoration: underline; }
+                        #ai-report-content blockquote { border-left: 4px solid #d8b4fe; padding-left: 16px; color: #581c87; font-style: italic; background: #faf5ff; padding: 12px; border-radius: 4px; }
+                        #ai-report-content code { background-color: #f3f4f6; padding: 2px 4px; rounded: 4px; color: #db2777; font-family: monospace; font-size: 0.9em; }
+                        #ai-report-content pre { background-color: #1f2937; color: #f3f4f6; padding: 16px; border-radius: 8px; overflow-x: auto; }
+                        #ai-report-content pre code { background-color: transparent; color: inherit; padding: 0; }
+                        #ai-report-content table { width: 100%; border-collapse: collapse; margin-top: 16px; margin-bottom: 16px; }
+                        #ai-report-content th { background-color: #f3f4f6; text-align: left; padding: 8px; border: 1px solid #e5e7eb; font-weight: 600; }
+                        #ai-report-content td { padding: 8px; border: 1px solid #e5e7eb; }
+                    `}</style>
+              <ReactMarkdown>{reportContent}</ReactMarkdown>
             </div>
           </CardContent>
         </Card>

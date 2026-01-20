@@ -43,25 +43,37 @@ export async function POST(req: Request) {
     - **Feasibility Score**: (0-100)
     - **Summary Verdict**: (1-2 sentences on the overall state of the project)
 
-    ## 2. Critical Analysis (What is Wrong?)
+    ## 2. Visual Logic Check
+    *Create a simple Mermaid diagram representing the core logic flow using \`graph TD\`.*
+    \\\`\\\`\\\`mermaid
+    graph TD
+      A[Core Problem] --> B[Effect 1]
+      C[Root Cause] --> A
+    \\\`\\\`\\\`
+    *(Adjust the nodes to match their actual data)*
+
+    ## 3. Critical Analysis (What is Wrong?)
     *Analyze the "Problem Tree" vs "Objective Tree" alignment and the Logframe logic.*
     - **Logical Gaps**: (Identify where causes don't lead to effects or activities don't lead to outputs)
     - **Missing Elements**: (e.g., vague assumptions, missing indicators)
     - **Risks**: (Potential pitfalls based on current design)
 
-    ## 3. Optimization Strategy (How to Fix It?)
+    ## 4. Optimization Strategy (How to Fix It?)
     *Concrete suggestions to improve the project.*
     - **Refined Problem Statement**: (Rewrite their problem statement to be more specific)
     - **SMART Objective Suggestions**: (Rewrite their objectives to be Specific, Measurable, Achievable, Relevant, Time-bound)
     - **Indicator Improvements**: (Suggest better indicators for their Goal/Purpose)
 
-    ## 4. The Execution Rulebook (What to Do Next?)
+    ## 5. The Execution Rulebook (What to Do Next?)
     *A step-by-step checklist for the user to execute this project successfully.*
     - [ ] Step 1: ...
     - [ ] Step 2: ...
     - [ ] Step 3: ...
+
+    ## 6. Recommended Resources
+    *Suggest 2-3 specific tools, frameworks, or reading materials relevant to their sector (Education, Health, etc.).*
     
-    Use bold key terms. Be critical but constructive. If fields are empty (""), point that out as a critical flaw.
+    Use bold key terms. Be critical but constructive. If fields are empty (""), point that out as a critical flaw. Format with clear headings and bullet points.
     `
 
         const completion = await openai.chat.completions.create({

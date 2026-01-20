@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react" // Removed React to fix conflict
+import ReactMarkdown from "react-markdown"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -225,7 +226,43 @@ export default function AssistantPage() {
                                                 : "bg-muted/50 border border-border rounded-tl-sm"
                                         )}
                                     >
-                                        <div className="whitespace-pre-wrap leading-relaxed">{message.content}</div>
+                                        <div className="text-sm leading-relaxed">
+                                            <ReactMarkdown
+                                                components={{
+                                                    ul: ({ node, ...props }) => <ul className="list-disc pl-4 my-2 space-y-1" {...props} />,
+                                                    ol: ({ node, ...props }) => <ol className="list-decimal pl-4 my-2 space-y-1" {...props} />,
+                                                    li: ({ node, ...props }) => <li className="pl-1" {...props} />,
+                                                    h1: ({ node, ...props }) => <h1 className="text-lg font-bold mt-4 mb-2" {...props} />,
+                                                    h2: ({ node, ...props }) => <h2 className="text-base font-bold mt-3 mb-2" {...props} />,
+                                                    h3: ({ node, ...props }) => <h3 className="text-sm font-bold mt-2 mb-1" {...props} />,
+                                                    p: ({ node, ...props }) => <p className="mb-2 last:mb-0" {...props} />,
+                                                    code: ({ node, className, children, ...props }: any) => {
+                                                        const match = /language-(\w+)/.exec(className || '')
+                                                        return (
+                                                            <code className={cn("font-mono text-xs", className ? "bg-transparent text-inherit" : "bg-black/10 dark:bg-white/10 px-1 py-0.5 rounded")} {...props}>
+                                                                {children}
+                                                            </code>
+                                                        )
+                                                    },
+                                                    pre: ({ node, ...props }) => (
+                                                        <div className="my-2 rounded-md overflow-hidden bg-zinc-950 dark:bg-zinc-900 border border-zinc-800 text-zinc-50">
+                                                            <div className="px-3 py-1.5 bg-zinc-900 border-b border-zinc-800 text-[10px] text-zinc-400 font-mono uppercase">
+                                                                Code
+                                                            </div>
+                                                            <pre className="p-3 overflow-x-auto text-xs font-mono leading-relaxed" {...props} />
+                                                        </div>
+                                                    ),
+                                                    blockquote: ({ node, ...props }) => (
+                                                        <blockquote className="border-l-2 border-primary/50 pl-3 my-2 italic text-muted-foreground" {...props} />
+                                                    ),
+                                                    a: ({ node, ...props }) => (
+                                                        <a className="underline hover:opacity-80 transition-opacity font-medium" target="_blank" rel="noopener noreferrer" {...props} />
+                                                    )
+                                                }}
+                                            >
+                                                {message.content}
+                                            </ReactMarkdown>
+                                        </div>
                                     </div>
 
                                     {/* Action Buttons for AI */}
