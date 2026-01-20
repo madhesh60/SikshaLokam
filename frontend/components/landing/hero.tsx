@@ -61,7 +61,7 @@ export function Hero() {
               </Button>
             </div>
 
-            <p className="text-xs text-muted-foreground">No credit card required. Free for NGOs under 10 users.</p>
+            
           </div>
 
           {/* Right Content - Visual */}

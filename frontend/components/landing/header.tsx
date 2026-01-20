@@ -10,7 +10,6 @@ const navItems = [
   { name: "Features", href: "#features" },
   { name: "How It Works", href: "#how-it-works" },
   { name: "Templates", href: "#templates" },
-  { name: "Resources", href: "#resources" },
 ]
 
 export function Header() {
