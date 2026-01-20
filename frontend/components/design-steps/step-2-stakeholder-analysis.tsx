@@ -48,9 +48,23 @@ export function Step2StakeholderAnalysis({ projectId }: Props) {
 
   useEffect(() => {
     if (project?.data.stakeholders) {
-      setStakeholders(project.data.stakeholders)
+      const serverData = project.data.stakeholders
+      if (JSON.stringify(serverData) !== JSON.stringify(stakeholders)) {
+        setStakeholders(serverData)
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project?.data.stakeholders])
+
+  // Debounced save
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      // Only sync if stakeholders array isn't empty (or sync empty if deliberate)
+      // We perform comparison to prevent unnecessary calls if possible, but the timer handles rapid updates.
+      updateProjectData(projectId, "stakeholders", stakeholders)
+    }, 1000)
+    return () => clearTimeout(timer)
+  }, [stakeholders, projectId, updateProjectData])
 
   const handleAddStakeholder = () => {
     const newStakeholder: Stakeholder = {
@@ -59,19 +73,25 @@ export function Step2StakeholderAnalysis({ projectId }: Props) {
     }
     const updated = [...stakeholders, newStakeholder]
     setStakeholders(updated)
-    updateProjectData(projectId, "stakeholders", updated)
   }
 
   const handleUpdateStakeholder = (id: string, field: keyof Stakeholder, value: string) => {
     const updated = stakeholders.map((s) => (s.id === id ? { ...s, [field]: value } : s))
     setStakeholders(updated)
-    updateProjectData(projectId, "stakeholders", updated)
+  }
+
+  const handleVoice = (id: string, field: keyof Stakeholder, text: string) => {
+    const stakeholder = stakeholders.find(s => s.id === id)
+    if (stakeholder) {
+      const current = (stakeholder[field] as string) || ""
+      const newValue = current ? `${current} ${text}` : text
+      handleUpdateStakeholder(id, field, newValue)
+    }
   }
 
   const handleRemoveStakeholder = (id: string) => {
     const updated = stakeholders.filter((s) => s.id !== id)
     setStakeholders(updated)
-    updateProjectData(projectId, "stakeholders", updated)
   }
 
   const handleComplete = () => {
@@ -142,7 +162,7 @@ export function Step2StakeholderAnalysis({ projectId }: Props) {
                             className="pr-10"
                           />
                           <div className="absolute right-2 top-1.5">
-                            <MicButton onTranscript={(text) => handleUpdateStakeholder(stakeholder.id, "name", text)} />
+                            <MicButton onTranscript={(text) => handleVoice(stakeholder.id, "name", text)} />
                           </div>
                         </div>
                       </div>
@@ -182,7 +202,7 @@ export function Step2StakeholderAnalysis({ projectId }: Props) {
                           className="pr-10"
                         />
                         <div className="absolute right-2 top-2">
-                          <MicButton onTranscript={(text) => handleUpdateStakeholder(stakeholder.id, "interest", text)} />
+                          <MicButton onTranscript={(text) => handleVoice(stakeholder.id, "interest", text)} />
                         </div>
                       </div>
                     </div>
@@ -218,7 +238,7 @@ export function Step2StakeholderAnalysis({ projectId }: Props) {
                             className="pr-10"
                           />
                           <div className="absolute right-2 top-1.5">
-                            <MicButton onTranscript={(text) => handleUpdateStakeholder(stakeholder.id, "expectations", text)} />
+                            <MicButton onTranscript={(text) => handleVoice(stakeholder.id, "expectations", text)} />
                           </div>
                         </div>
                       </div>
@@ -259,7 +279,7 @@ export function Step2StakeholderAnalysis({ projectId }: Props) {
                             className="bg-red-50/50 border-red-100 focus-visible:ring-red-200 min-h-[80px]"
                           />
                           <div className="absolute right-2 top-2">
-                            <MicButton onTranscript={(text) => handleUpdateStakeholder(stakeholder.id, "currentPractice", text)} />
+                            <MicButton onTranscript={(text) => handleVoice(stakeholder.id, "currentPractice", text)} />
                           </div>
                         </div>
                       </div>
@@ -282,7 +302,7 @@ export function Step2StakeholderAnalysis({ projectId }: Props) {
                             className="bg-green-50/50 border-green-100 focus-visible:ring-green-200 min-h-[80px]"
                           />
                           <div className="absolute right-2 top-2">
-                            <MicButton onTranscript={(text) => handleUpdateStakeholder(stakeholder.id, "expectedPractice", text)} />
+                            <MicButton onTranscript={(text) => handleVoice(stakeholder.id, "expectedPractice", text)} />
                           </div>
                         </div>
                       </div>
@@ -301,7 +321,7 @@ export function Step2StakeholderAnalysis({ projectId }: Props) {
                           className="pr-10"
                         />
                         <div className="absolute right-2 top-1.5">
-                          <MicButton onTranscript={(text) => handleUpdateStakeholder(stakeholder.id, "linkedOutcome", text)} />
+                          <MicButton onTranscript={(text) => handleVoice(stakeholder.id, "linkedOutcome", text)} />
                         </div>
                       </div>
                     </div>

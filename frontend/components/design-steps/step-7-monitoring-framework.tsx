@@ -47,9 +47,13 @@ export function Step7MonitoringFramework({ projectId }: Props) {
     }
   }, [project?.data.monitoring])
 
-  const saveData = (data: MonitoringFramework) => {
-    updateProjectData(projectId, "monitoring", data)
-  }
+  // Debounced Save
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      updateProjectData(projectId, "monitoring", monitoring)
+    }, 1000)
+    return () => clearTimeout(timer)
+  }, [monitoring, projectId, updateProjectData])
 
   const addIndicator = () => {
     const newIndicator: Indicator = {
@@ -65,7 +69,6 @@ export function Step7MonitoringFramework({ projectId }: Props) {
     }
     const updated = { ...monitoring, indicators: [...monitoring.indicators, newIndicator] }
     setMonitoring(updated)
-    saveData(updated)
   }
 
   const updateIndicator = (id: string, field: keyof Indicator, value: string) => {
@@ -74,7 +77,6 @@ export function Step7MonitoringFramework({ projectId }: Props) {
       indicators: monitoring.indicators.map((ind) => (ind.id === id ? { ...ind, [field]: value } : ind)),
     }
     setMonitoring(updated)
-    saveData(updated)
   }
 
   const removeIndicator = (id: string) => {
@@ -83,13 +85,27 @@ export function Step7MonitoringFramework({ projectId }: Props) {
       indicators: monitoring.indicators.filter((ind) => ind.id !== id),
     }
     setMonitoring(updated)
-    saveData(updated)
   }
 
   const updateField = (field: keyof Omit<MonitoringFramework, "indicators">, value: string) => {
     const updated = { ...monitoring, [field]: value }
     setMonitoring(updated)
-    saveData(updated)
+  }
+
+  const handleVoice = (type: "field" | "indicator", idOrField: string, subField: string | null, text: string) => {
+    if (type === "field") {
+      const field = idOrField as keyof Omit<MonitoringFramework, "indicators">
+      const current = monitoring[field] as string
+      updateField(field, current ? `${current} ${text}` : text)
+    } else if (type === "indicator") {
+      const id = idOrField
+      const field = subField as keyof Indicator
+      const indicator = monitoring.indicators.find(i => i.id === id)
+      if (indicator) {
+        const current = indicator[field] as string
+        updateIndicator(id, field, current ? `${current} ${text}` : text)
+      }
+    }
   }
 
   const handleComplete = () => {
@@ -163,7 +179,7 @@ export function Step7MonitoringFramework({ projectId }: Props) {
                         className="pr-10"
                       />
                       <div className="absolute right-2 top-1.5">
-                        <MicButton onTranscript={(text) => updateIndicator(indicator.id, "name", text)} />
+                        <MicButton onTranscript={(text) => handleVoice("indicator", indicator.id, "name", text)} />
                       </div>
                     </div>
                   </div>
@@ -237,7 +253,7 @@ export function Step7MonitoringFramework({ projectId }: Props) {
                         className="pr-10"
                       />
                       <div className="absolute right-2 top-1.5">
-                        <MicButton onTranscript={(text) => updateIndicator(indicator.id, "baseline", text)} />
+                        <MicButton onTranscript={(text) => handleVoice("indicator", indicator.id, "baseline", text)} />
                       </div>
                     </div>
                   </div>
@@ -251,7 +267,7 @@ export function Step7MonitoringFramework({ projectId }: Props) {
                         className="pr-10"
                       />
                       <div className="absolute right-2 top-1.5">
-                        <MicButton onTranscript={(text) => updateIndicator(indicator.id, "target", text)} />
+                        <MicButton onTranscript={(text) => handleVoice("indicator", indicator.id, "target", text)} />
                       </div>
                     </div>
                   </div>
@@ -283,7 +299,7 @@ export function Step7MonitoringFramework({ projectId }: Props) {
                         className="pr-10"
                       />
                       <div className="absolute right-2 top-1.5">
-                        <MicButton onTranscript={(text) => updateIndicator(indicator.id, "responsible", text)} />
+                        <MicButton onTranscript={(text) => handleVoice("indicator", indicator.id, "responsible", text)} />
                       </div>
                     </div>
                   </div>
@@ -299,7 +315,7 @@ export function Step7MonitoringFramework({ projectId }: Props) {
                       className="pr-10"
                     />
                     <div className="absolute right-2 top-1.5">
-                      <MicButton onTranscript={(text) => updateIndicator(indicator.id, "source", text)} />
+                      <MicButton onTranscript={(text) => handleVoice("indicator", indicator.id, "source", text)} />
                     </div>
                   </div>
                 </div>
@@ -326,7 +342,7 @@ export function Step7MonitoringFramework({ projectId }: Props) {
                 className="pr-10"
               />
               <div className="absolute right-2 top-2">
-                <MicButton onTranscript={(text) => updateField("dataCollection", text)} />
+                <MicButton onTranscript={(text) => handleVoice("field", "dataCollection", null, text)} />
               </div>
             </div>
           </CardContent>
@@ -347,7 +363,7 @@ export function Step7MonitoringFramework({ projectId }: Props) {
                 className="pr-10"
               />
               <div className="absolute right-2 top-2">
-                <MicButton onTranscript={(text) => updateField("reportingSchedule", text)} />
+                <MicButton onTranscript={(text) => handleVoice("field", "reportingSchedule", null, text)} />
               </div>
             </div>
           </CardContent>
