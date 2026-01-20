@@ -110,10 +110,6 @@ export default function LoginPage() {
               </button>
             </div>
           </div>
-
-          <div className="rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground">
-            <strong>Demo Mode:</strong> Use any email and password to sign in. Your data will be stored locally.
-          </div>
         </CardContent>
 
         <CardFooter className="flex flex-col gap-4">

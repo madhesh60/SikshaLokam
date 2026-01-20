@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Project = require('../models/Project');
 const { protect } = require('../middleware/authMiddleware');
+const { generatePDF, generateDOCX, generateExcel } = require('../utils/exportService');
 
 // @desc    Get all projects for a user
 // @route   GET /api/projects
@@ -97,6 +98,50 @@ router.delete('/:id', protect, async (req, res) => {
         }
     } catch (error) {
         res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Export project in various formats
+// @route   GET /api/projects/:id/export/:format
+// @access  Private
+router.get('/:id/export/:format', protect, async (req, res) => {
+    try {
+        const { id, format } = req.params;
+        const project = await Project.findById(id);
+
+        if (!project || project.user.toString() !== req.user._id.toString()) {
+            return res.status(404).json({ message: 'Project not found' });
+        }
+
+        const fileName = `${project.name.replace(/\s+/g, '-').toLowerCase()}-lfa`;
+
+        switch (format.toLowerCase()) {
+            case 'pdf':
+                res.setHeader('Content-Type', 'application/pdf');
+                res.setHeader('Content-Disposition', `attachment; filename="${fileName}.pdf"`);
+                await generatePDF(project, res);
+                break;
+
+            case 'docx':
+                const docxBuffer = await generateDOCX(project);
+                res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+                res.setHeader('Content-Disposition', `attachment; filename="${fileName}.docx"`);
+                res.send(docxBuffer);
+                break;
+
+            case 'xlsx':
+                const xlsxBuffer = await generateExcel(project);
+                res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+                res.setHeader('Content-Disposition', `attachment; filename="${fileName}.xlsx"`);
+                res.send(xlsxBuffer);
+                break;
+
+            default:
+                return res.status(400).json({ message: 'Invalid format. Supported formats: pdf, docx, xlsx' });
+        }
+    } catch (error) {
+        console.error('Export error:', error);
+        res.status(500).json({ message: 'Error generating export: ' + error.message });
     }
 });
 

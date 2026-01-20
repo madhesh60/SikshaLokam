@@ -198,21 +198,6 @@ export default function RegisterPage() {
             </div>
             <p className="text-xs text-muted-foreground">Must be at least 8 characters</p>
           </div>
-
-          {/* Benefits */}
-          <div className="rounded-lg bg-primary/5 border border-primary/10 p-4">
-            <p className="text-sm font-medium text-foreground mb-2">What you get for free:</p>
-            <ul className="space-y-1.5">
-              {["Unlimited program designs", "All 7 LFA steps", "PDF & Word exports", "Template library"].map(
-                (benefit) => (
-                  <li key={benefit} className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
-                    {benefit}
-                  </li>
-                ),
-              )}
-            </ul>
-          </div>
         </CardContent>
 
         <CardFooter className="flex flex-col gap-4">
