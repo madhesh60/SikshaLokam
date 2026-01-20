@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area" // Assuming it is or will be installed
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useDemoStore } from "@/lib/demo-store"
-import { Send, User, Bot, Sparkles, Loader2, RefreshCw, Copy, ThumbsUp, ThumbsDown, MoreHorizontal } from "lucide-react"
+import { Send, User, Bot, Sparkles, Loader2, RefreshCw, Copy, ThumbsUp, ThumbsDown, MoreHorizontal, CheckCircle2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
@@ -114,6 +114,68 @@ export default function AssistantPage() {
         }
     }
 
+    const [copiedId, setCopiedId] = useState<string | null>(null)
+    const [likedIds, setLikedIds] = useState<Set<string>>(new Set())
+    const [dislikedIds, setDislikedIds] = useState<Set<string>>(new Set())
+
+    const handleCopy = (content: string, id: string) => {
+        navigator.clipboard.writeText(content)
+        setCopiedId(id)
+        setTimeout(() => setCopiedId(null), 2000)
+    }
+
+    const handleRegenerate = () => {
+        // Find the last user message
+        const lastUserMessageIndex = messages.findLastIndex(m => m.role === "user")
+        if (lastUserMessageIndex === -1) return
+
+        const lastUserMessage = messages[lastUserMessageIndex]
+
+        // Remove everything after the last user message (including the AI response we want to regenerate)
+        // If the AI response failed or is being regenerated, we want to start fresh from that user message
+        const newHistory = messages.slice(0, lastUserMessageIndex)
+        setMessages(newHistory)
+
+        // Trigger send with the last user message content
+        handleSendMessage(lastUserMessage.content)
+    }
+
+    const handleLike = (id: string) => {
+        setLikedIds(prev => {
+            const next = new Set(prev)
+            if (next.has(id)) {
+                next.delete(id)
+            } else {
+                next.add(id)
+                // Remove from dislikes if present
+                setDislikedIds(d => {
+                    const newDislikes = new Set(d)
+                    newDislikes.delete(id)
+                    return newDislikes
+                })
+            }
+            return next
+        })
+    }
+
+    const handleDislike = (id: string) => {
+        setDislikedIds(prev => {
+            const next = new Set(prev)
+            if (next.has(id)) {
+                next.delete(id)
+            } else {
+                next.add(id)
+                // Remove from likes if present
+                setLikedIds(l => {
+                    const newLikes = new Set(l)
+                    newLikes.delete(id)
+                    return newLikes
+                })
+            }
+            return next
+        })
+    }
+
     return (
         <div className="flex flex-col h-[calc(100vh-6rem)] gap-4"> {/* Adjusted height to account for header/padding */}
             <div className="flex items-center justify-between">
@@ -129,7 +191,7 @@ export default function AssistantPage() {
             <Card className="flex-1 flex flex-col overflow-hidden border-muted/50 shadow-sm relative">
                 <ScrollArea className="flex-1 p-4">
                     <div className="space-y-6 max-w-3xl mx-auto pb-4">
-                        {messages.map((message) => (
+                        {messages.map((message, index) => (
                             <div
                                 key={message.id}
                                 className={cn(
@@ -169,17 +231,44 @@ export default function AssistantPage() {
                                     {/* Action Buttons for AI */}
                                     {message.role === "assistant" && (
                                         <div className="flex items-center gap-1 mt-1 pl-1">
-                                            <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground">
-                                                <Copy className="h-3 w-3" />
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                                                onClick={() => handleCopy(message.content, message.id)}
+                                            >
+                                                {copiedId === message.id ? <CheckCircle2 className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
                                             </Button>
-                                            <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground">
-                                                <RefreshCw className="h-3 w-3" />
-                                            </Button>
+
+                                            {/* Only show refresh on the latest message */}
+                                            {index === messages.length - 1 && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                                                    onClick={handleRegenerate}
+                                                    disabled={isLoading}
+                                                >
+                                                    <RefreshCw className={cn("h-3 w-3", isLoading && "animate-spin")} />
+                                                </Button>
+                                            )}
+
                                             <Separator orientation="vertical" className="h-3 mx-1" />
-                                            <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground">
+
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className={cn("h-6 w-6 hover:text-foreground", likedIds.has(message.id) ? "text-primary" : "text-muted-foreground")}
+                                                onClick={() => handleLike(message.id)}
+                                            >
                                                 <ThumbsUp className="h-3 w-3" />
                                             </Button>
-                                            <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className={cn("h-6 w-6 hover:text-foreground", dislikedIds.has(message.id) ? "text-destructive" : "text-muted-foreground")}
+                                                onClick={() => handleDislike(message.id)}
+                                            >
                                                 <ThumbsDown className="h-3 w-3" />
                                             </Button>
                                         </div>
