@@ -334,6 +334,36 @@ export const useDemoStore = create<DemoStore>()(
             const projects = await res.json()
             const mappedProjects = projects.map((p: any) => ({ ...p, id: p._id }))
             set({ projects: mappedProjects })
+
+            // Retroactive Badge Sync
+            // Automatically award badges for steps completed in loaded projects
+            // This fixes issues where badges weren't saved in previous sessions
+            const { earnBadge } = get()
+            const badgeMap: Record<number, string> = {
+              1: "problem-analyst",
+              2: "stakeholder-mapper",
+              3: "root-cause-detective",
+              4: "solution-architect",
+              5: "theory-builder",
+              6: "logframe-master",
+              7: "impact-measurer",
+            }
+
+            mappedProjects.forEach((p: Project) => {
+              // Sync step badges
+              p.completedSteps.forEach((step) => {
+                const badgeId = badgeMap[step]
+                if (badgeId) earnBadge(badgeId)
+              })
+
+              // Sync project completion badge
+              if (p.completedSteps.length === 7) {
+                earnBadge("program-designer")
+              }
+
+              // Sync first project badge
+              earnBadge("first-project")
+            })
           }
         } catch (error) {
           console.error(error)
@@ -500,20 +530,32 @@ export const useDemoStore = create<DemoStore>()(
       },
 
       earnBadge: async (badgeId) => {
-        // This logic really should be backend side to persist badges on user model
-        // For now, we update local state but we need a backend endpoint to add badge to user if we want it to persist properly
-        // I didn't create an add-badge endpoint. I'll rely on local persist for now or skip backend persist for badges
-        // Wait, the User schema has badges. I should update the user.
+        const { user, badges } = get()
+        if (!user?.token) return
 
-        // Let's omit the API call for badges for now to save time, or just update the user logic.
-        set((state) => {
-          if (state.badges.includes(badgeId)) return state
-          const newBadges = [...state.badges, badgeId]
-          return {
-            badges: newBadges,
-            user: state.user ? { ...state.user, badges: newBadges } : state.user,
-          }
-        })
+        // Check if already earned to avoid duplicate calls
+        if (badges.includes(badgeId)) return
+
+        // Optimistic update
+        const newBadges = [...badges, badgeId]
+        set((state) => ({
+          badges: newBadges,
+          user: state.user ? { ...state.user, badges: newBadges } : state.user,
+        }))
+
+        try {
+          await fetch(`${API_URL}/auth/badges`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${user.token}`
+            },
+            body: JSON.stringify({ badgeId }),
+          })
+        } catch (error) {
+          console.error("Failed to persist badge:", error)
+          // Optionally revert state here if strict consistency is needed
+        }
       },
     }),
     {
