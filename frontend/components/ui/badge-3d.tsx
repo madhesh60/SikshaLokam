@@ -6,7 +6,7 @@ import { Badge3DStatic } from "./badge-3d-static"
 
 // Dynamically import the 3D canvas (no SSR for three.js)
 // We only load this when the user interacts, saving resources
-const Badge3DCanvas = dynamic(() => import("./badge-3d-canvas").then((mod) => mod.Badge3DCanvas), {
+const Badge3DCanvas = dynamic(() => import("./badge-3d-canvas"), {
     ssr: false,
     loading: () => null, // The Static badge is already visible during load time technically, or we can show a spinner
 })
