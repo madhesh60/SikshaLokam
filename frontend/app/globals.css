@@ -208,3 +208,32 @@
 .animate-pulse-ring {
   animation: pulse-ring 1.5s ease-out infinite;
 }
+
+/* 3D Badge Utilities */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
+@keyframes shine {
+  0% { left: -100%; top: -100%; }
+  50% { left: 50%; top: 50%; }
+  100% { left: 200%; top: 200%; }
+}
+
+.animate-shine {
+  animation: shine 4s ease-in-out infinite;
+  width: 200%;
+  height: 200%;
+}

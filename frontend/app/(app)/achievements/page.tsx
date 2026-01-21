@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { useDemoStore, BADGES } from "@/lib/demo-store"
 import { Trophy, Lock, CheckCircle2, Star, TrendingUp } from "lucide-react"
+import { Badge3D } from "@/components/ui/badge-3d"
 
 export default function AchievementsPage() {
   const { badges, projects } = useDemoStore()
@@ -50,10 +51,10 @@ export default function AchievementsPage() {
       </div>
 
       {/* Earned Badges */}
-      <div className="space-y-4">
+      <div className="space-y-6">
         <div className="flex items-center gap-2">
-          <Star className="h-5 w-5 text-accent" />
-          <h2 className="text-xl font-semibold">Earned Badges ({earnedBadges.length})</h2>
+          <Star className="h-6 w-6 text-yellow-500 fill-yellow-500" />
+          <h2 className="text-2xl font-bold">Earned Badges ({earnedBadges.length})</h2>
         </div>
 
         {earnedBadges.length === 0 ? (
@@ -67,56 +68,24 @@ export default function AchievementsPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 place-items-center">
             {earnedBadges.map((badge) => (
-              <Card key={badge.id} className="bg-accent/5 border-accent/20">
-                <CardContent className="pt-6">
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-accent/20 text-2xl">
-                      {badge.icon}
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-foreground">{badge.name}</h3>
-                      <p className="text-sm text-muted-foreground">{badge.description}</p>
-                      <Badge variant="secondary" className="mt-2 bg-accent/10 text-accent-foreground">
-                        <CheckCircle2 className="mr-1 h-3 w-3" />
-                        Earned
-                      </Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <Badge3D key={badge.id} badge={badge} isearned={true} />
             ))}
           </div>
         )}
       </div>
 
       {/* Locked Badges */}
-      <div className="space-y-4">
+      <div className="space-y-6">
         <div className="flex items-center gap-2">
           <Lock className="h-5 w-5 text-muted-foreground" />
           <h2 className="text-xl font-semibold text-muted-foreground">Locked Badges ({lockedBadges.length})</h2>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 place-items-center">
           {lockedBadges.map((badge) => (
-            <Card key={badge.id} className="bg-muted/30 border-border/50 opacity-75">
-              <CardContent className="pt-6">
-                <div className="flex items-start gap-4">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-muted text-2xl grayscale">
-                    {badge.icon}
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground">{badge.name}</h3>
-                    <p className="text-sm text-muted-foreground">{badge.description}</p>
-                    <Badge variant="outline" className="mt-2">
-                      <Lock className="mr-1 h-3 w-3" />
-                      Locked
-                    </Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <Badge3D key={badge.id} badge={badge} isearned={false} />
           ))}
         </div>
       </div>
