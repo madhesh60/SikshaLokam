@@ -30,3 +30,5 @@ next-env.d.ts
 # dev build
 frontend/dev/
 node_modules
+.next
+
