@@ -10,6 +10,18 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.get('/', (req, res) => {
+  res.send('SikshaLokam Backend is running successfully');
+});
+
+app.get('/health', (req, res) => {
+  res.send('SikshaLokam Backend is healthy');
+});
+
+app.get('/api/health', (req, res) => {
+  res.send('SikshaLokam Backend API is healthy');
+});
+
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/projects', require('./routes/projectRoutes'));
 
