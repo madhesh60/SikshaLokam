@@ -1,181 +1,221 @@
 "use client"
 
-import React, { useRef, useEffect } from "react"
+import React, { useRef, useState } from "react"
 import { Canvas, useFrame } from "@react-three/fiber"
-import { Html, OrbitControls, Environment, Sparkles, Float, ContactShadows } from "@react-three/drei"
+import { Text, Sparkles } from "@react-three/drei"
 import * as THREE from "three"
 import { cn } from "@/lib/utils"
-import { Lock, Star } from "lucide-react"
 
-const GOLD_COLOR = "#FFD700"
-const LOCKED_COLOR = "#718096"
+function BadgeFlipCard({ badge, isearned }: { badge: any, isearned: boolean }) {
+    const groupRef = useRef<THREE.Group>(null)
+    const [isFlipped, setIsFlipped] = useState(false)
+    const targetRotation = useRef(0)
 
-function Coin({ badge, isearned, isAnimating, onAnimationComplete }: { 
-    badge: any, 
-    isearned: boolean,
-    isAnimating: boolean,
-    onAnimationComplete: () => void
-}) {
-    const meshRef = useRef<THREE.Group>(null)
-    const animationStartTime = useRef<number | null>(null)
+    const handleClick = (e: any) => {
+        e.stopPropagation()
+        setIsFlipped(prev => !prev)
+        targetRotation.current = !isFlipped ? Math.PI : 0
+    }
 
-    useFrame((state) => {
-        if (!meshRef.current) return;
+    useFrame((state, delta) => {
+        if (!groupRef.current) return
 
-        if (isAnimating) {
-            if (animationStartTime.current === null) {
-                animationStartTime.current = state.clock.elapsedTime;
-            }
+        const step = 5 * delta
+        const currentY = groupRef.current.rotation.y
+        const diff = targetRotation.current - currentY
 
-            const elapsed = state.clock.elapsedTime - animationStartTime.current;
-            const duration = 1.5; // LeetCode-style quick spin
-
-            if (elapsed < duration) {
-                // Smooth ease-out animation with multiple rotations
-                const t = elapsed / duration;
-                const easeOut = 1 - Math.pow(1 - t, 3);
-                
-                // 3 full rotations (6 * PI)
-                meshRef.current.rotation.y = Math.PI * 6 * easeOut;
-            } else {
-                // Animation complete - reset to static position
-                meshRef.current.rotation.y = 0;
-                animationStartTime.current = null;
-                onAnimationComplete();
-            }
+        if (Math.abs(diff) > 0.01) {
+            groupRef.current.rotation.y += diff * step
         } else {
-            // Static - no rotation
-            meshRef.current.rotation.y = 0;
-            animationStartTime.current = null;
+            groupRef.current.rotation.y = targetRotation.current
         }
     })
 
-    // High-Quality PBR Material
-    const materialProps = {
-        color: isearned ? GOLD_COLOR : LOCKED_COLOR,
-        metalness: isearned ? 1.0 : 0.8,
-        roughness: isearned ? 0.15 : 0.4,
-        clearcoat: isearned ? 1.0 : 0,
-        clearcoatRoughness: 0.1,
-        envMapIntensity: isearned ? 2 : 1,
-    }
+    const iconColor = isearned ? "#92400E" : "#6B7280"
+    const textColor = isearned ? "#92400E" : "#6B7280"
 
     return (
-        <group ref={meshRef} rotation={[Math.PI / 2, 0, 0]}>
-            {/* Coin Body - Increased Segments for Smoothness */}
-            <mesh>
-                <cylinderGeometry args={[2.5, 2.5, 0.4, 128]} />
-                <meshPhysicalMaterial {...materialProps} />
+        <group
+            ref={groupRef}
+            onClick={handleClick}
+            onPointerOver={() => document.body.style.cursor = 'pointer'}
+            onPointerOut={() => document.body.style.cursor = 'auto'}
+        >
+            {/* Front Side: Badge with Golden Circle */}
+            <group position={[0, 0, 0.1]}>
+                {/* Outer Golden Ring */}
+                <mesh position={[0, 0, -0.08]}>
+                    <torusGeometry args={[1.4, 0.15, 16, 64]} />
+                    <meshStandardMaterial
+                        color={isearned ? "#F59E0B" : "#9CA3AF"}
+                        emissive={isearned ? "#D97706" : "#6B7280"}
+                        emissiveIntensity={0.6}
+                        metalness={0.8}
+                        roughness={0.2}
+                    />
+                </mesh>
+
+                {/* Inner Golden Ring */}
+                <mesh position={[0, 0, -0.07]}>
+                    <torusGeometry args={[1.2, 0.1, 16, 64]} />
+                    <meshStandardMaterial
+                        color={isearned ? "#FBBF24" : "#D1D5DB"}
+                        emissive={isearned ? "#F59E0B" : "#9CA3AF"}
+                        emissiveIntensity={0.5}
+                        metalness={0.7}
+                        roughness={0.3}
+                    />
+                </mesh>
+
+                {/* Center Circle Background */}
+                <mesh position={[0, 0, -0.05]}>
+                    <circleGeometry args={[1.15, 64]} />
+                    <meshStandardMaterial
+                        color={isearned ? "#FEF3C7" : "#F3F4F6"}
+                        emissive={isearned ? "#FCD34D" : "#E5E7EB"}
+                        emissiveIntensity={0.3}
+                        metalness={0.3}
+                        roughness={0.5}
+                    />
+                </mesh>
+
+                {/* Icon */}
+                <Text
+                    fontSize={1}
+                    color={iconColor}
+                    anchorX="center"
+                    anchorY="middle"
+                    position={[0, 0, 0.02]}
+                >
+                    {badge.icon || "🏆"}
+                    <meshStandardMaterial
+                        color={iconColor}
+                        roughness={0.4}
+                    />
+                </Text>
+            </group>
+
+            {/* Back Side: Golden Ring with Description Text Inside */}
+            <group position={[0, 0, -0.1]} rotation={[0, Math.PI, 0]}>
+                {/* Outer Golden Ring */}
+                <mesh position={[0, 0, 0]}>
+                    <torusGeometry args={[1.4, 0.15, 16, 64]} />
+                    <meshStandardMaterial
+                        color={isearned ? "#F59E0B" : "#9CA3AF"}
+                        emissive={isearned ? "#D97706" : "#6B7280"}
+                        emissiveIntensity={0.6}
+                        metalness={0.8}
+                        roughness={0.2}
+                    />
+                </mesh>
+
+                {/* Inner Golden Ring */}
+                <mesh position={[0, 0, 0.01]}>
+                    <torusGeometry args={[1.2, 0.1, 16, 64]} />
+                    <meshStandardMaterial
+                        color={isearned ? "#FBBF24" : "#D1D5DB"}
+                        emissive={isearned ? "#F59E0B" : "#9CA3AF"}
+                        emissiveIntensity={0.5}
+                        metalness={0.7}
+                        roughness={0.3}
+                    />
+                </mesh>
+
+                {/* White/Light Center Circle */}
+                <mesh position={[0, 0, -0.02]}>
+                    <circleGeometry args={[1.15, 64]} />
+                    <meshStandardMaterial
+                        color={isearned ? "#FFFFFF" : "#F9FAFB"}
+                        emissive={isearned ? "#FEF3C7" : "#F3F4F6"}
+                        emissiveIntensity={0.2}
+                        metalness={0.1}
+                        roughness={0.6}
+                    />
+                </mesh>
+
+                {/* Description Text */}
+                <Text
+                    color={textColor}
+                    fontSize={0.20}
+                    maxWidth={2}
+                    lineHeight={1.3}
+                    textAlign="center"
+                    anchorX="center"
+                    anchorY="middle"
+                    position={[0, 0, 0.02]}
+                >
+                    {badge.description}
+                    <meshStandardMaterial
+                        color={textColor}
+                        roughness={0.5}
+                    />
+                </Text>
+            </group>
+
+            {/* Invisible hit box */}
+            <mesh visible={false}>
+                <boxGeometry args={[3.5, 3.5, 0.5]} />
+                <meshBasicMaterial />
             </mesh>
 
-            {/* Rim */}
-            <mesh rotation={[Math.PI / 2, 0, 0]}>
-                <torusGeometry args={[2.5, 0.15, 16, 128]} />
-                <meshPhysicalMaterial {...materialProps} color={isearned ? "#F6E05E" : "#A0AEC0"} />
-            </mesh>
-
-            {/* Front Inset */}
-            <mesh position={[0, 0.21, 0]}>
-                <cylinderGeometry args={[2.2, 2.2, 0.05, 128]} />
-                <meshPhysicalMaterial {...materialProps} color={isearned ? "#FEFCBF" : "#E2E8F0"} roughness={0.3} />
-            </mesh>
-
-            {/* Back Inset */}
-            <mesh position={[0, -0.21, 0]}>
-                <cylinderGeometry args={[2.2, 2.2, 0.05, 128]} />
-                <meshPhysicalMaterial {...materialProps} color={isearned ? "#FEFCBF" : "#E2E8F0"} roughness={0.3} />
-            </mesh>
-
-            {/* Icon on Front */}
-            <Html
-                transform
-                occlude="blending"
-                position={[0, 0.26, 0]}
-                rotation={[-Math.PI / 2, 0, 0]}
-                style={{ width: '100px', height: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}
-            >
-                <div className={cn("transform scale-[3] drop-shadow-2xl", isearned ? "text-yellow-800" : "text-slate-500 grayscale")}>
-                    {/* We assume badge.icon is an emoji/string. To make it 'real', we add shadows and filters */}
-                    {badge.icon}
-                </div>
-            </Html>
-
-            {/* Sparkles for earned */}
+            {/* Sparkles for earned badges */}
             {isearned && (
-                <Sparkles count={35} scale={5} size={6} speed={0.4} opacity={0.8} color="#FFFFE0" position={[0, 0, 0]} />
+                <Sparkles
+                    count={30}
+                    scale={4}
+                    size={3}
+                    speed={0.3}
+                    opacity={0.6}
+                    color="#FBBF24"
+                />
             )}
         </group>
     )
 }
 
 export default function Badge3DCanvas({ badge, isearned }: { badge: any, isearned: boolean }) {
-    const [isAnimating, setIsAnimating] = React.useState(false)
-
-    const handleClick = () => {
-        if (!isAnimating) {
-            setIsAnimating(true)
-        }
-    }
-
-    const handleAnimationComplete = () => {
-        setIsAnimating(false)
-    }
-
     return (
-        <div className="w-full flex flex-col items-center group animate-in fade-in zoom-in duration-500">
+        <div className="w-full flex flex-col items-center group relative">
             {/* 3D Viewer */}
-            <div 
-                className="w-56 h-56 relative cursor-pointer active:scale-95 transition-transform"
-                onClick={handleClick}
-            >
-                <Canvas dpr={[1, 2]} camera={{ position: [0, 0, 6], fov: 50 }}>
-                    <ambientLight intensity={0.5} />
+            <div className="w-56 h-56 relative cursor-pointer hover:scale-105 transition-transform duration-200">
+                <Canvas
+                    dpr={[1, 2]}
+                    camera={{ position: [0, 0, 5], fov: 50 }}
+                    gl={{ alpha: true, antialias: true, preserveDrawingBuffer: true }}
+                >
                     {/* Enhanced Lighting */}
-                    <spotLight position={[10, 10, 10]} angle={0.25} penumbra={1} intensity={2} castShadow color="white" />
-                    <spotLight position={[-10, 5, 10]} angle={0.25} penumbra={1} intensity={1} color="#FFD700" />
-                    <Environment preset={isearned ? "city" : "studio"} />
+                    <ambientLight intensity={0.9} />
+                    <spotLight position={[10, 10, 10]} angle={0.4} penumbra={1} intensity={1.5} color="#FFF7ED" />
+                    <spotLight position={[-10, 10, 5]} angle={0.4} penumbra={1} intensity={0.8} color="#FCD34D" />
+                    <pointLight position={[0, -10, 5]} intensity={0.6} color="#F59E0B" />
 
-                    <Float speed={1.5} rotationIntensity={0} floatIntensity={0.2} enabled={!isAnimating}>
-                        <Coin 
-                            badge={badge} 
-                            isearned={isearned} 
-                            isAnimating={isAnimating}
-                            onAnimationComplete={handleAnimationComplete}
-                        />
-                    </Float>
-
-                    <OrbitControls
-                        enableZoom={false}
-                        enablePan={false}
-                        autoRotate={false}
-                        enabled={!isAnimating}
-                        minPolarAngle={Math.PI / 4}
-                        maxPolarAngle={Math.PI - Math.PI / 4}
+                    <BadgeFlipCard
+                        badge={badge}
+                        isearned={isearned}
                     />
-                    <ContactShadows position={[0, -2, 0]} opacity={0.5} scale={10} blur={2.0} far={4} />
                 </Canvas>
             </div>
 
-            {/* HTML Info Card (Below the 3D Model) */}
-            <div className="mt-2 text-center z-10 w-full px-2">
-                <h3 className={cn(
-                    "font-bold text-lg",
-                    isearned ? "text-yellow-600 drop-shadow-sm" : "text-muted-foreground"
-                )}>
-                    {badge.name}
-                </h3>
-                <p className="text-xs text-muted-foreground mx-auto line-clamp-2 h-8">
-                    {badge.description}
-                </p>
+            {/* Instruction */}
+            <p className="text-[10px] text-muted-foreground mt-2 opacity-50">Click to flip</p>
 
-                <div className="mt-2 flex justify-center">
-                    {isearned ? (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 text-[10px] font-bold uppercase tracking-wider border border-yellow-200 shadow-sm">
-                            <Star className="w-3 h-3 fill-yellow-700" /> Earned
-                        </span>
-                    ) : (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-wider border border-slate-200">
-                            <Lock className="w-3 h-3" /> Locked
+            {/* Badge Label with Brown Background */}
+            <div className="mt-3 text-center w-full px-4">
+                <div className={cn(
+                    "inline-flex items-center justify-center gap-2 px-5 py-2 rounded-md shadow-md",
+                    isearned 
+                        ? "bg-amber-900 text-amber-50" 
+                        : "bg-gray-700 text-gray-300"
+                )}>
+                    {isearned && (
+                        <span className="text-amber-300 text-sm font-bold">★</span>
+                    )}
+                    <h3 className="font-bold text-sm uppercase tracking-wide">
+                        {badge.name}
+                    </h3>
+                    {isearned && (
+                        <span className="text-amber-300 text-xs font-semibold uppercase tracking-wider">
+                            EARNED
                         </span>
                     )}
                 </div>

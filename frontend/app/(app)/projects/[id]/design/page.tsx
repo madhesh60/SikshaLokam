@@ -31,7 +31,7 @@ import { Step6LogicalFramework } from "@/components/design-steps/step-6-logical-
 import { Step7MonitoringFramework } from "@/components/design-steps/step-7-monitoring-framework"
 import type React from "react"
 
-const iconMap: Record<string, React.ElementType> = {
+const iconMap: Record<string, any> = {
   target: Target,
   users: Users,
   "git-branch": GitBranch,
