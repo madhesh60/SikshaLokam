@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter, useParams } from "next/navigation"
-import { useDemoStore } from "@/lib/demo-store"
+import { useDemoStore, API_URL } from "@/lib/demo-store"
 import { Button } from "@/components/ui/button"
 import ReactMarkdown from "react-markdown"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -115,7 +115,7 @@ export default function ReviewPage() {
       }
 
       // Call backend API
-      const response = await fetch(`http://127.0.0.1:5000/api/projects/${id}/export/${format}`, {
+      const response = await fetch(`${API_URL}/projects/${id}/export/${format}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
