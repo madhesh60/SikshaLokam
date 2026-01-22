@@ -49,4 +49,3 @@ export function BadgeNotification() {
     </Dialog>
   )
 }
-

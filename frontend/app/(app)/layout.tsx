@@ -9,6 +9,7 @@ import { AppSidebar } from "@/components/app/sidebar"
 import { AppHeader } from "@/components/app/header"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { BadgeNotification } from "@/components/app/badge-notification"
+import { LearningGuide } from "@/components/app/learning-guide"
 
 export default function AppLayout({
   children,
@@ -38,8 +39,8 @@ export default function AppLayout({
         <AppHeader />
         <main className="flex-1 p-4 md:p-6 bg-muted/30 min-h-[calc(100vh-4rem)]">{children}</main>
       </SidebarInset>
+      <LearningGuide />
       <BadgeNotification />
     </SidebarProvider>
   )
 }
-

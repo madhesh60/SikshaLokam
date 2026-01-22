@@ -8,6 +8,12 @@ import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
   Target,
   Users,
   GitBranch,
@@ -144,10 +150,32 @@ export default function DesignPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="gap-1 h-7">
-              <Sparkles className="h-3 w-3" />
-              AI Enabled
-            </Badge>
+            <Button variant="outline" size="sm" className="h-7 text-xs border-dashed gap-1">
+              <Users className="h-3 w-3" />
+              Share
+            </Button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className={`h-7 text-xs gap-1 ${project.status === 'completed' ? 'text-green-600 border-green-200 bg-green-50' :
+                  project.status === 'review' ? 'text-purple-600 border-purple-200 bg-purple-50' :
+                    project.status === 'draft' ? 'text-slate-600 border-slate-200' : 'text-blue-600 border-blue-200 bg-blue-50'
+                  }`}>
+                  <div className={`h-2 w-2 rounded-full ${project.status === 'completed' ? 'bg-green-500' :
+                    project.status === 'review' ? 'bg-purple-500' :
+                      project.status === 'draft' ? 'bg-slate-500' : 'bg-blue-500'
+                    }`} />
+                  <span className="capitalize">{project.status === 'in-progress' ? 'In Progress' : project.status}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => updateProject(projectId, { status: 'draft' })}>Draft</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => updateProject(projectId, { status: 'in-progress' })}>In Progress</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => updateProject(projectId, { status: 'review' })}>Ready for Review</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => updateProject(projectId, { status: 'completed' })}>Approved / Completed</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <Button variant="outline" size="sm" onClick={handleSave} disabled={isSaving} className="h-7 text-xs">
               <Save className="mr-2 h-3 w-3" />
               {isSaving ? "Saving..." : "Save"}
@@ -232,6 +260,6 @@ export default function DesignPage() {
           </div>
         </div>
       </div>
-    </TooltipProvider>
+    </TooltipProvider >
   )
 }
