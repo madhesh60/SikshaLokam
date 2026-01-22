@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     "Theory of Change",
     "Impact Measurement",
   ],
-  authors: [{ name: "Shiksha Raha" }],
+  authors: [{ name: "madhesh" }],
   icons: {
     icon: [
       { url: "/icon-light-32x32.png", media: "(prefers-color-scheme: light)" },

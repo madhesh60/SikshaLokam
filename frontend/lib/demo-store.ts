@@ -510,7 +510,7 @@ export const useDemoStore = create<DemoStore>()(
         const progress = Math.round((completedSteps.length / 7) * 100)
 
         await get().updateProject(projectId, {
-          currentStep: Math.max(project.currentStep, step + 1),
+          currentStep: Math.min(Math.max(project.currentStep, step + 1), 7),
           completedSteps,
           progress,
           status: progress === 100 ? "completed" : "in-progress",

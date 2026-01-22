@@ -74,7 +74,8 @@ export default function DesignPage() {
   useEffect(() => {
     if (project && !initialized.current) {
       setCurrentProject(project)
-      setCurrentStep(project.currentStep || 1)
+      const startStep = project.currentStep || 1
+      setCurrentStep(startStep > 7 ? 7 : startStep)
       initialized.current = true
     }
   }, [project, setCurrentProject])
@@ -111,6 +112,8 @@ export default function DesignPage() {
       if (nextStep > project.currentStep) {
         updateProject(projectId, { currentStep: nextStep })
       }
+    } else {
+      router.push(`/projects/${projectId}/review`)
     }
   }
 
