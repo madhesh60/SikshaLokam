@@ -20,22 +20,10 @@ interface Props {
 
 type Stakeholder = NonNullable<ProjectData["stakeholders"]>[number]
 
-// ... (defaultStakeholder and other constants defined in lines 22-40 ommitted for brevity as we are just replacing the top part or function signature)
-// WAIT, replace_file_content needs exact context. I should target the top interface and function definition separately or carefuly.
-
-// Let's replace from interface Props to export function line.
-// Lines 16-18 and 42. It's a bit far apart.
-// I'll do two chunks if possible, or one larger chunk if I include the types.
-// Lines 16 to 42 covers line 20 type, line 22 const, line 30 const, line 36 const. That's too much context to replicate safely without erroring on missing lines.
-
-// I will use replace_file_content for just the Props interface first.
-// Then another for the function signature.
-// Then another for handleComplete.
-
-// Attempt 1: Props interface
 
 
-type Stakeholder = NonNullable<ProjectData["stakeholders"]>[number]
+
+
 
 const defaultStakeholder: Omit<Stakeholder, "id"> = {
   name: "",
@@ -80,15 +68,29 @@ export function Step2StakeholderAnalysis({ projectId, onNext }: Props) {
   const [stakeholders, setStakeholders] = useState<Stakeholder[]>([])
   const [activeTab, setActiveTab] = useState("identification")
 
+  // Load initial data
+  useEffect(() => {
+    if (project?.data.stakeholders && stakeholders.length === 0) {
+      setStakeholders(project.data.stakeholders)
+    }
+    // We only want to load initial data once per project load
+    // so we rely on project.id changing to reset or similar logic if we were navigating
+    // But since this component remounts on navigation (different route or key), just checking empty might be enough.
+    // To be safer:
+  }, [project?.id])
+
+  // Sync if project changes completely (e.g. from one project to another without unmount?)
   useEffect(() => {
     if (project?.data.stakeholders) {
-      const serverData = project.data.stakeholders
-      if (JSON.stringify(serverData) !== JSON.stringify(stakeholders)) {
-        setStakeholders(serverData)
+      // Only update if we have a fresh project load (length mismatch is a rough proxy for "not initialized" or "server has data we don't")
+      // OR better, trust the user layout key to remount.
+      // If we simply rely on the mount effect above, it's safer.
+      // But let's support loading saved data if we navigated back to this step.
+      if (stakeholders.length === 0 && project.data.stakeholders.length > 0) {
+        setStakeholders(project.data.stakeholders)
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [project?.data.stakeholders])
+  }, [project?.id, project?.data.stakeholders])
 
   // Debounced save
   useEffect(() => {

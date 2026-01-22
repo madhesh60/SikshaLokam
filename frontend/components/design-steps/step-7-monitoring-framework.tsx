@@ -44,9 +44,11 @@ export function Step7MonitoringFramework({ projectId, onNext }: Props) {
 
   useEffect(() => {
     if (project?.data.monitoring) {
+      // Sync only on mount/project change
       setMonitoring(project.data.monitoring)
     }
-  }, [project?.data.monitoring])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project?.id])
 
   // Debounced Save
   useEffect(() => {

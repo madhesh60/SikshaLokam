@@ -25,18 +25,16 @@ export function Step4ObjectiveTree({ projectId }: Props) {
 
   useEffect(() => {
     if (project?.data.objectiveTree) {
+      // Sync only on mount/project change
       const { centralObjective: co, means: m, ends: e } = project.data.objectiveTree
-      const currentState = { centralObjective, means, ends }
       const serverState = { centralObjective: co || "", means: m || [], ends: e || [] }
 
-      if (JSON.stringify(currentState) !== JSON.stringify(serverState)) {
-        setCentralObjective(serverState.centralObjective)
-        setMeans(serverState.means)
-        setEnds(serverState.ends)
-      }
+      setCentralObjective(serverState.centralObjective)
+      setMeans(serverState.means)
+      setEnds(serverState.ends)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [project?.data.objectiveTree])
+  }, [project?.id])
 
   // Debounced Save
   useEffect(() => {
