@@ -10,26 +10,32 @@ export function BadgeNotification() {
   const { badges } = useDemoStore()
   const [showBadge, setShowBadge] = useState<(typeof BADGES)[number] | null>(null)
 
-  // Use a ref to track initial load to prevent notification spam on refresh
-  const isFirstLoad = useRef(true)
-  const previousBadgesRef = useRef<string[]>([])
+  // Track badges that have already been processed/shown to the user
+  const processedBadges = useRef(new Set<string>(badges))
+  const isFirstRender = useRef(true)
 
   useEffect(() => {
-    // On first load, just sync the ref and don't show notifications
-    if (isFirstLoad.current) {
-      previousBadgesRef.current = badges
-      isFirstLoad.current = false
+    // If it's the very first render, ensure we mark all current badges as seen
+    // so we don't notify for them.
+    if (isFirstRender.current) {
+      badges.forEach((id) => processedBadges.current.add(id))
+      isFirstRender.current = false
       return
     }
 
-    // Check for new badges
-    if (badges.length > previousBadgesRef.current.length) {
-      // Find the new badge(s)
-      const newBadgeIds = badges.filter(id => !previousBadgesRef.current.includes(id))
+    // Identify truly new badges by checking against our processed set
+    // This handles cases where 'previousBadges' might be stale or cleared
+    const newBadgeIds = badges.filter((id) => !processedBadges.current.has(id))
 
-      if (newBadgeIds.length > 0) {
-        // Just show the last one to avoid spamming multiple dialogs
-        const latestBadgeId = newBadgeIds[newBadgeIds.length - 1]
+    if (newBadgeIds.length > 0) {
+      // Mark these as processed immediately
+      newBadgeIds.forEach((id) => processedBadges.current.add(id))
+
+      // Only show a notification if it's a single new badge
+      // If we receive multiple badges at once (e.g. >1), it's likely a data sync
+      // or hydration event, so we suppress the potential spam.
+      if (newBadgeIds.length === 1) {
+        const latestBadgeId = newBadgeIds[0]
         const newBadge = BADGES.find((b) => b.id === latestBadgeId)
 
         if (newBadge) {
@@ -43,9 +49,6 @@ export function BadgeNotification() {
         }
       }
     }
-
-    // Update ref
-    previousBadgesRef.current = badges
   }, [badges])
 
   if (!showBadge) return null

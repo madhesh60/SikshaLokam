@@ -570,6 +570,7 @@ export const useDemoStore = create<DemoStore>()(
       partialize: (state) => ({
         user: state.user,
         isOnboarded: state.isOnboarded,
+        badges: state.badges,
         // We can persist projects too, but fetching on load is safer for sync
       }),
     },
