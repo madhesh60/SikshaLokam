@@ -23,16 +23,13 @@
 - [Problem Statement](#-problem-statement)
 - [Solution](#-solution)
 - [Features](#-features)
-- [System Architecture](#-system-architecture)
+- [Architecture](#-system-architecture)
 - [Technology Stack](#-technology-stack)
 - [Project Structure](#-project-structure)
 - [Quick Start](#-quick-start)
 - [Documentation](#-documentation)
 - [API Reference](#-api-reference)
-- [Contributing](#-contributing)
 - [License](#-license)
-- [Contact](#-contact)
-
 ---
 
 ## 🌟 Overview
@@ -49,7 +46,7 @@
 
 ---
 
-## 🎯 Problem Statement
+## Problem Statement
 
 Educational programs face three critical challenges:
 
@@ -59,7 +56,7 @@ Educational programs face three critical challenges:
 
 ---
 
-## 💡 Solution
+## Solution
 
 SikshaLokam bridges the gap between rigorous methodology and engaging user experience:
 
@@ -430,7 +427,6 @@ Ensure you have the following installed:
 
 ```bash
 git clone https://github.com/madhesh60/SikshaLokam.git
-cd SikshaLokam
 ```
 
 #### 2️⃣ Backend Setup
@@ -678,77 +674,6 @@ Content-Type: application/json
 
 For complete API documentation, see [API.md](./docs/API.md)
 
----
-
-## 🧪 Testing
-
-### Run Tests
-
-```bash
-# Frontend tests
-cd frontend
-npm run test
-
-# Backend tests
-cd backend
-npm run test
-
-# E2E tests
-npm run test:e2e
-```
-
-### Test Coverage
-
-```bash
-# Generate coverage report
-npm run test:coverage
-```
-
----
-
-## 🤝 Contributing
-
-We welcome contributions from the community! Please read our [Contributing Guidelines](./docs/CONTRIBUTING.md) before submitting a pull request.
-
-### Development Workflow
-
-1. **Fork the repository**
-2. **Create a feature branch**
-   ```bash
-   git checkout -b feature/amazing-feature
-   ```
-3. **Make your changes**
-4. **Commit with conventional commits**
-   ```bash
-   git commit -m "feat: add amazing feature"
-   ```
-5. **Push to your fork**
-   ```bash
-   git push origin feature/amazing-feature
-   ```
-6. **Open a Pull Request**
-
-### Code Style
-
-- Follow the existing code style
-- Run `npm run lint` before committing
-- Write meaningful commit messages
-- Add tests for new features
-
-### Commit Convention
-
-We follow [Conventional Commits](https://www.conventionalcommits.org/):
-
-- `feat:` New feature
-- `fix:` Bug fix
-- `docs:` Documentation changes
-- `style:` Code style changes (formatting)
-- `refactor:` Code refactoring
-- `test:` Test additions or updates
-- `chore:` Build process or auxiliary tool changes
-
----
-
 
 
 ## 📄 License
@@ -766,21 +691,3 @@ in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software...
 ```
-
----
-
-
-
-
-
-
-
-
-
-<div align="center">
-
-**[⬆ Back to Top](#-sikshalokam)**
-
-Made with ❤️ by the SikshaLokam Team
-
-</div>
