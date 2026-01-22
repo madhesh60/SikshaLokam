@@ -13,6 +13,7 @@ import { MicButton } from "@/components/ui/mic-button"
 
 interface Props {
   projectId: string
+  onNext?: () => void
 }
 
 type Indicator = NonNullable<ProjectData["monitoring"]>["indicators"][number]
@@ -31,7 +32,7 @@ const frequencies = [
   { value: "annually", label: "Annually" },
 ]
 
-export function Step7MonitoringFramework({ projectId }: Props) {
+export function Step7MonitoringFramework({ projectId, onNext }: Props) {
   const { projects, updateProjectData, updateProgress } = useDemoStore()
   const project = projects.find((p) => p.id === projectId)
 
@@ -43,9 +44,11 @@ export function Step7MonitoringFramework({ projectId }: Props) {
 
   useEffect(() => {
     if (project?.data.monitoring) {
+      // Sync only on mount/project change
       setMonitoring(project.data.monitoring)
     }
-  }, [project?.data.monitoring])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project?.id])
 
   // Debounced Save
   useEffect(() => {
@@ -110,6 +113,9 @@ export function Step7MonitoringFramework({ projectId }: Props) {
 
   const handleComplete = () => {
     updateProgress(projectId, 7)
+    if (onNext) {
+      onNext()
+    }
   }
 
   const isComplete = monitoring.indicators.length >= 1 && monitoring.dataCollection && monitoring.reportingSchedule

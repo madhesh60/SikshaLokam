@@ -61,10 +61,11 @@ export function Step5ResultsChain({ projectId }: Props) {
 
   useEffect(() => {
     if (project?.data.resultsChain) {
+      // Sync only on mount/project change
       setResultsChain(project.data.resultsChain)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [project?.data.resultsChain])
+  }, [project?.id])
 
   // Debounced Save
   useEffect(() => {

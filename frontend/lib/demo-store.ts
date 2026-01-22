@@ -81,6 +81,7 @@ export interface ProjectData {
     currentPractice?: string
     expectedPractice?: string
     linkedOutcome?: string
+    systemLevel?: string
   }>
   problemTree?: {
     centralProblem: string
@@ -418,6 +419,31 @@ export const useDemoStore = create<DemoStore>()(
         }))
       },
 
+      addDiscussionReply: (discussionId, content) => {
+        const { user, discussions } = get()
+        const discussion = discussions.find((d) => d.id === discussionId)
+        if (!discussion) return
+
+        const newReply: DiscussionReply = {
+          id: crypto.randomUUID(),
+          discussionId,
+          author: user?.name || "Guest User",
+          avatar: user?.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : "GU",
+          content,
+          timestamp: "Just now"
+        }
+
+        const updatedDiscussion = {
+          ...discussion,
+          replies: discussion.replies + 1,
+          repliesList: [...(discussion.repliesList || []), newReply]
+        }
+
+        set((state) => ({
+          discussions: state.discussions.map((d) => d.id === discussionId ? updatedDiscussion : d)
+        }))
+      },
+
       inviteOrganizationMember: (email, role) => {
         const newMember: OrganizationMember = {
           id: crypto.randomUUID(),
@@ -679,7 +705,7 @@ export const useDemoStore = create<DemoStore>()(
         const progress = Math.round((completedSteps.length / 7) * 100)
 
         await get().updateProject(projectId, {
-          currentStep: Math.max(project.currentStep, step + 1),
+          currentStep: Math.min(Math.max(project.currentStep, step + 1), 7),
           completedSteps,
           progress,
           status: progress === 100 ? "completed" : "in-progress",
@@ -812,6 +838,7 @@ export const useDemoStore = create<DemoStore>()(
         isOnboarded: state.isOnboarded,
         organizationMembers: state.organizationMembers,
         discussions: state.discussions,
+        badges: state.badges,
         // We can persist projects too, but fetching on load is safer for sync
       }),
     },

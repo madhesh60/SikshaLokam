@@ -158,10 +158,11 @@ export function Step6LogicalFramework({ projectId }: Props) {
 
   useEffect(() => {
     if (project?.data.logframe) {
+      // Sync only on mount/project change
       setLogframe(project.data.logframe)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [project?.data.logframe])
+  }, [project?.id])
 
   // Debounced Save
   useEffect(() => {

@@ -40,6 +40,7 @@ export function Step1ProblemDefinition({ projectId, onNext }: Props) {
 
   const [similarProjects, setSimilarProjects] = useState<Project[]>([])
 
+  // Load initial data
   useEffect(() => {
     if (project?.data.problemDefinition) {
       const serverData = project.data.problemDefinition
@@ -57,13 +58,14 @@ export function Step1ProblemDefinition({ projectId, onNext }: Props) {
         geographicScope: safeGeographicScope
       }
 
-      if (JSON.stringify(safeData) !== JSON.stringify(formData)) {
-        setFormData(safeData)
-      }
+      // Initialize form data only if empty or if project ID changed (conceptually)
+      // Since this component remounts for new projects, we just check against default state or emptiness.
+      // But to be robust against navigation back and forth:
+      setFormData(safeData)
     }
-    // We intentionally omit formData from deps here to prevent infinite loop
+    // Only run on mount or project ID change
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [project?.data.problemDefinition])
+  }, [project?.id])
 
   // Debounced save
   useEffect(() => {

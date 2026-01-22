@@ -25,21 +25,21 @@ export function Step3ProblemTree({ projectId }: Props) {
 
   useEffect(() => {
     if (project?.data.problemTree) {
+      // Sync from server only on mount/project change if we have content
       const { centralProblem: cp, causes: c, effects: e } = project.data.problemTree
-      const currentState = { centralProblem, causes, effects }
       const serverState = { centralProblem: cp || "", causes: c || [], effects: e || [] }
 
-      if (JSON.stringify(currentState) !== JSON.stringify(serverState)) {
-        setCentralProblem(serverState.centralProblem)
-        setCauses(serverState.causes)
-        setEffects(serverState.effects)
-      }
+      setCentralProblem(serverState.centralProblem)
+      setCauses(serverState.causes)
+      setEffects(serverState.effects)
+
     } else if (project?.data.problemDefinition?.centralProblem && !centralProblem) {
       // Fallback to problem definition if tree is empty and local state is empty
       setCentralProblem(project.data.problemDefinition.centralProblem)
     }
+    // Only run on mount or project ID change
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [project?.data.problemTree, project?.data.problemDefinition])
+  }, [project?.id])
 
   // Debounced Save Effect
   useEffect(() => {
