@@ -672,10 +672,6 @@ Content-Type: application/json
 }
 ```
 
-For complete API documentation, see [API.md](./docs/API.md)
-
-
-
 ## 📄 License
 
 This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
