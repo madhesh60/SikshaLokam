@@ -43,6 +43,7 @@ const defaultStakeholder: Omit<Stakeholder, "id"> = {
   interest: "",
   influence: "medium",
   expectations: "",
+  systemLevel: "village",
 }
 
 const stakeholderTypes = [
@@ -50,6 +51,21 @@ const stakeholderTypes = [
   { value: "secondary", label: "Secondary Stakeholder", description: "Indirectly affected or supporting" },
   { value: "key", label: "Key Decision Maker", description: "Has authority over resources or policy" },
 ]
+
+const systemLevels = [
+  { value: "village", label: "Village / Community", description: "Grassroots level (e.g., VAO, Parents)" },
+  { value: "block", label: "Block Level", description: "Administrative block (e.g., BEO, BRC)" },
+  { value: "district", label: "District Level", description: "District administration (e.g., DEO, DIET)" },
+  { value: "state", label: "State Level", description: "State departments (e.g., SCERT, SPD)" },
+  { value: "national", label: "National / Other", description: "National bodies or external partners" },
+]
+
+const commonRoles = {
+  village: ["VAO", "School Management Committee", "Headmaster", "Parents", "Panchayat Leader"],
+  block: ["Block Education Officer", "Block Resource Coordinator", "Cluster Resource Coordinator"],
+  district: ["District Education Officer", "DIET Principal", "District Collector"],
+  state: ["State Project Director", "SCERT Director", "Principal Secretary"],
+}
 
 const influenceLevels = [
   { value: "high", label: "High", color: "bg-red-500/10 text-red-700" },
@@ -139,6 +155,43 @@ export function Step2StakeholderAnalysis({ projectId, onNext }: Props) {
 
       {/* Stakeholder List */}
       <div className="space-y-4">
+        {/* Quick Add Helper */}
+        {stakeholders.length > 0 && activeTab === 'identification' && (
+          <Card className="bg-muted/30 border-dashed">
+            <CardHeader className="pb-3 px-4 pt-4">
+              <CardTitle className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
+                <Users className="h-3 w-3" />
+                Quick Add Common Roles
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-4 pb-4">
+              <div className="flex flex-wrap gap-2">
+                {Object.entries(commonRoles).map(([level, roles]) => (
+                  roles.map(role => (
+                    <Badge
+                      key={`${level}-${role}`}
+                      variant="outline"
+                      className="cursor-pointer hover:bg-primary/10 transition-colors"
+                      onClick={() => {
+                        const newStakeholder: Stakeholder = {
+                          ...defaultStakeholder,
+                          id: crypto.randomUUID(),
+                          name: role,
+                          systemLevel: level,
+                        }
+                        setStakeholders([...stakeholders, newStakeholder])
+                      }}
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      {role}
+                    </Badge>
+                  ))
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {stakeholders.length === 0 ? (
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-12">
@@ -184,6 +237,29 @@ export function Step2StakeholderAnalysis({ projectId, onNext }: Props) {
                             <MicButton onTranscript={(text) => handleVoice(stakeholder.id, "name", text)} />
                           </div>
                         </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>System Level</Label>
+                        <Select
+                          value={stakeholder.systemLevel || "village"}
+                          onValueChange={(value) =>
+                            handleUpdateStakeholder(stakeholder.id, "systemLevel", value)
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {systemLevels.map((level) => (
+                              <SelectItem key={level.value} value={level.value}>
+                                <div>
+                                  <div>{level.label}</div>
+                                  <div className="text-xs text-muted-foreground">{level.description}</div>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div className="space-y-2">
                         <Label>Stakeholder Type</Label>
@@ -278,9 +354,14 @@ export function Step2StakeholderAnalysis({ projectId, onNext }: Props) {
                     <CardTitle className="text-base flex items-center gap-2">
                       <Users className="h-4 w-4 text-primary" />
                       {stakeholder.name || `Stakeholder ${index + 1}`}
-                      <Badge variant="outline" className="ml-auto font-normal">
-                        {stakeholderTypes.find((t) => t.value === stakeholder.type)?.label}
-                      </Badge>
+                      <div className="flex gap-2 ml-auto">
+                        <Badge variant="secondary" className="font-normal text-xs">
+                          {systemLevels.find((l) => l.value === (stakeholder.systemLevel || "village"))?.label}
+                        </Badge>
+                        <Badge variant="outline" className="font-normal">
+                          {stakeholderTypes.find((t) => t.value === stakeholder.type)?.label}
+                        </Badge>
+                      </div>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="pt-4 space-y-6">

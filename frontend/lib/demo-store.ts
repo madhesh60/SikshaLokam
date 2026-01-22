@@ -58,6 +58,7 @@ export interface ProjectData {
     currentPractice?: string
     expectedPractice?: string
     linkedOutcome?: string
+    systemLevel?: string
   }>
   problemTree?: {
     centralProblem: string
