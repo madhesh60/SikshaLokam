@@ -16,6 +16,7 @@ import { ExternalLink, ArrowDownToLine } from "lucide-react"
 
 interface Props {
   projectId: string
+  onNext?: () => void
 }
 
 const aiSuggestions = [
@@ -25,7 +26,7 @@ const aiSuggestions = [
   "Ensure the problem is within your organization's scope to address.",
 ]
 
-export function Step1ProblemDefinition({ projectId }: Props) {
+export function Step1ProblemDefinition({ projectId, onNext }: Props) {
   const { projects, updateProjectData, updateProgress } = useDemoStore()
   const project = projects.find((p) => p.id === projectId)
 
@@ -125,6 +126,7 @@ export function Step1ProblemDefinition({ projectId }: Props) {
 
   const handleComplete = () => {
     updateProgress(projectId, 1)
+    if (onNext) onNext()
   }
 
   const isComplete =

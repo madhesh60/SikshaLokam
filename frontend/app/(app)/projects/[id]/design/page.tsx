@@ -201,8 +201,14 @@ export default function DesignPage() {
 
         {/* Step Content */}
         <div className="flex-1 overflow-y-auto rounded-lg border border-border bg-card p-4">
-          {StepComponent ? (
-            <StepComponent projectId={projectId} />
+          {currentStep > 7 ? (
+            <div className="flex flex-col items-center justify-center h-full">
+              <p>Redirecting to review...</p>
+              {/* Force redirect if it lingers */}
+              {void router.push(`/projects/${projectId}/review`)}
+            </div>
+          ) : StepComponent ? (
+            <StepComponent projectId={projectId} onNext={handleNext} />
           ) : (
             <div className="p-4 text-center text-muted-foreground">
               Component for step {currentStep} not found.
