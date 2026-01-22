@@ -45,7 +45,12 @@ const projectSchema = mongoose.Schema({
             centralProblem: String,
             context: String,
             targetBeneficiaries: String,
-            geographicScope: String,
+            geographicScope: {
+                state: String,
+                district: String,
+                block: String,
+                cluster: String
+            },
             urgency: String
         },
         stakeholders: [{

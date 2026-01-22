@@ -39,7 +39,12 @@ export interface ProjectData {
     centralProblem: string
     context: string
     targetBeneficiaries: string
-    geographicScope: string
+    geographicScope: {
+      state: string
+      district: string
+      block: string
+      cluster: string
+    }
     urgency: string
   }
   stakeholders?: Array<{
@@ -147,7 +152,7 @@ export const TEMPLATES: Template[] = [
         centralProblem: "Low school enrollment and attendance rates among marginalized children",
         context: "",
         targetBeneficiaries: "Children aged 6-14 from marginalized communities",
-        geographicScope: "",
+        geographicScope: { state: "", district: "", block: "", cluster: "" },
         urgency: "high",
       },
     },
@@ -165,7 +170,7 @@ export const TEMPLATES: Template[] = [
         centralProblem: "Poor foundational literacy and numeracy skills among primary school students",
         context: "",
         targetBeneficiaries: "Students in grades 1-5",
-        geographicScope: "",
+        geographicScope: { state: "", district: "", block: "", cluster: "" },
         urgency: "high",
       },
     },
@@ -183,7 +188,7 @@ export const TEMPLATES: Template[] = [
         centralProblem: "Inadequate teaching capacity and pedagogical skills among teachers",
         context: "",
         targetBeneficiaries: "Primary and secondary school teachers",
-        geographicScope: "",
+        geographicScope: { state: "", district: "", block: "", cluster: "" },
         urgency: "medium",
       },
     },
@@ -201,7 +206,7 @@ export const TEMPLATES: Template[] = [
         centralProblem: "Limited access to quality digital learning resources",
         context: "",
         targetBeneficiaries: "Students and teachers in underserved schools",
-        geographicScope: "",
+        geographicScope: { state: "", district: "", block: "", cluster: "" },
         urgency: "medium",
       },
     },
@@ -219,7 +224,7 @@ export const TEMPLATES: Template[] = [
         centralProblem: "Low community and parental involvement in children education",
         context: "",
         targetBeneficiaries: "Parents and community members",
-        geographicScope: "",
+        geographicScope: { state: "", district: "", block: "", cluster: "" },
         urgency: "medium",
       },
     },

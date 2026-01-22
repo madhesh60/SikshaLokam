@@ -10,6 +10,9 @@ import { Button } from "@/components/ui/button"
 import { useDemoStore, type ProjectData } from "@/lib/demo-store"
 import { Lightbulb, Sparkles } from "lucide-react"
 import { MicButton } from "@/components/ui/mic-button"
+import { GeographySelector } from "@/components/ui/geography-selector"
+import { API_URL, type Project } from "@/lib/demo-store"
+import { ExternalLink, ArrowDownToLine } from "lucide-react"
 
 interface Props {
   projectId: string
@@ -30,17 +33,31 @@ export function Step1ProblemDefinition({ projectId }: Props) {
     centralProblem: "",
     context: "",
     targetBeneficiaries: "",
-    geographicScope: "",
+    geographicScope: { state: "", district: "", block: "", cluster: "" },
     urgency: "medium",
   })
 
+  const [similarProjects, setSimilarProjects] = useState<Project[]>([])
+
   useEffect(() => {
     if (project?.data.problemDefinition) {
-      // Only update if significantly different to avoid cursor jumps
-      // For simplicity, we just sync. The debounce below prevents the loop.
       const serverData = project.data.problemDefinition
-      if (JSON.stringify(serverData) !== JSON.stringify(formData)) {
-        setFormData(serverData)
+
+      // Handle legacy string data for geographicScope
+      let safeGeographicScope = { state: "", district: "", block: "", cluster: "" }
+
+      // If server data has geographicScope as string or null/undefined, use default
+      if (serverData.geographicScope && typeof serverData.geographicScope === 'object') {
+        safeGeographicScope = serverData.geographicScope as any
+      }
+
+      const safeData = {
+        ...serverData,
+        geographicScope: safeGeographicScope
+      }
+
+      if (JSON.stringify(safeData) !== JSON.stringify(formData)) {
+        setFormData(safeData)
       }
     }
     // We intentionally omit formData from deps here to prevent infinite loop
@@ -55,13 +72,53 @@ export function Step1ProblemDefinition({ projectId }: Props) {
     return () => clearTimeout(timer)
   }, [formData, projectId, updateProjectData])
 
-  const handleChange = (field: keyof typeof formData, value: string) => {
+  const handleChange = (field: keyof typeof formData, value: any) => {
     const updated = { ...formData, [field]: value }
     setFormData(updated)
   }
 
+  const handleGeographyChange = (value: typeof formData.geographicScope) => {
+    setFormData({ ...formData, geographicScope: value })
+  }
+
+  useEffect(() => {
+    const fetchSimilar = async () => {
+      const { state, district } = formData.geographicScope
+      if (!state) {
+        setSimilarProjects([])
+        return
+      }
+
+      try {
+        const token = useDemoStore.getState().user?.token
+        if (!token) return
+
+        const query = new URLSearchParams()
+        if (state) query.append("state", state)
+        if (district) query.append("district", district)
+        // Optional: include block/cluster if needed query.append("block", block)
+
+        const res = await fetch(`${API_URL}/projects/location?${query.toString()}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+
+        if (res.ok) {
+          const projects = await res.json()
+          // Filter out current project to show others
+          setSimilarProjects(projects.filter((p: any) => p._id !== projectId && p.id !== projectId))
+        }
+      } catch (e) {
+        console.error(e)
+      }
+    }
+
+    // Debounce fetching
+    const timer = setTimeout(fetchSimilar, 800)
+    return () => clearTimeout(timer)
+  }, [formData.geographicScope])
+
   const handleVoice = (field: keyof typeof formData, text: string) => {
-    const current = formData[field] || ""
+    const current = formData[field] as string || ""
     const newValue = current ? `${current} ${text}` : text
     handleChange(field, newValue)
   }
@@ -71,7 +128,55 @@ export function Step1ProblemDefinition({ projectId }: Props) {
   }
 
   const isComplete =
-    formData.centralProblem && formData.context && formData.targetBeneficiaries && formData.geographicScope
+    formData.centralProblem &&
+    formData.context &&
+    formData.targetBeneficiaries &&
+    formData.geographicScope.state &&
+    formData.geographicScope.district
+
+
+  const handleImportProject = async (sourceId: string, sourceName: string) => {
+    if (!confirm(`Are you sure you want to import data from "${sourceName}"?\n\nThis will overwrite your current problem definition and LFA content.`)) {
+      return
+    }
+
+    try {
+      const token = useDemoStore.getState().user?.token
+      if (!token) return
+
+      const res = await fetch(`${API_URL}/projects/${projectId}/import`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ sourceId })
+      })
+
+      if (res.ok) {
+        const updatedProject = await res.json()
+        const projectWithId = { ...updatedProject, id: updatedProject._id }
+
+        // Update global store
+        useDemoStore.getState().setCurrentProject(projectWithId)
+        // Refresh local projects list
+        useDemoStore.getState().fetchProjects()
+
+        // Force refresh local form state
+        if (updatedProject.data?.problemDefinition) {
+          setFormData(updatedProject.data.problemDefinition)
+        }
+
+        alert("Project data imported successfully!")
+      } else {
+        const err = await res.json()
+        alert(`Failed to import: ${err.message}`)
+      }
+    } catch (e) {
+      console.error(e)
+      alert("An error occurred while importing.")
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -172,18 +277,42 @@ export function Step1ProblemDefinition({ projectId }: Props) {
               <CardDescription>Where will this program be implemented?</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="relative">
-                <Input
-                  placeholder="e.g., 5 blocks in Muzaffarpur district, Bihar"
-                  value={formData.geographicScope}
-                  onChange={(e) => handleChange("geographicScope", e.target.value)}
-                  className="pr-10"
-                />
-                <div className="absolute right-2 top-1.5">
-                  <MicButton onTranscript={(text) => handleVoice("geographicScope", text)} />
+              <GeographySelector
+                value={formData.geographicScope}
+                onChange={handleGeographyChange}
+              />
+
+              {similarProjects.length > 0 && (
+                <div className="mt-4 pt-4 border-t">
+                  <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-purple-500" />
+                    Existing Projects in {formData.geographicScope.district || formData.geographicScope.state}
+                  </h4>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {similarProjects.map((p: any) => (
+                      <div
+                        key={p.id || p._id}
+                        className="text-sm p-3 bg-muted/50 hover:bg-muted rounded border flex items-center justify-between group transition-colors cursor-pointer"
+                        onClick={() => handleImportProject(p.id || p._id, p.name)}
+                        title="Click to use this plan as a template"
+                      >
+                        <div className="overflow-hidden">
+                          <div className="font-medium truncate" title={p.name}>{p.name || "Untitled"}</div>
+                          <div className="text-xs text-muted-foreground truncate" title={p.organization}>{p.organization}</div>
+                          <div className="text-[10px] text-primary mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            Click to Import Plan
+                          </div>
+                        </div>
+                        <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground group-hover:text-primary">
+                          <ArrowDownToLine className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              <div className="space-y-2">
+              )}
+
+              <div className="space-y-2 mt-4">
                 <Label>Problem Urgency</Label>
                 <Select value={formData.urgency} onValueChange={(value) => handleChange("urgency", value)}>
                   <SelectTrigger>
@@ -208,7 +337,8 @@ export function Step1ProblemDefinition({ projectId }: Props) {
           Mark Step as Complete
         </Button>
       </div >
-    </div >
+    </div>
+
   )
 }
 
