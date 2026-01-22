@@ -18,6 +18,25 @@ export interface User {
   token?: string
 }
 
+export interface Comment {
+  id: string
+  userId: string
+  userName: string
+  userAvatar?: string
+  text: string
+  stepId: number
+  createdAt: string
+}
+
+export interface TeamMember {
+  id: string // userId
+  name: string
+  email: string
+  role: "owner" | "editor" | "viewer"
+  avatar?: string
+  status: "active" | "pending"
+}
+
 export interface Project {
   id: string // This will map to _id from MongoDB
   name: string
@@ -32,6 +51,10 @@ export interface Project {
   updatedAt: string
   data: ProjectData
   badges: string[]
+  // Collaboration & Insights
+  comments: Comment[]
+  team: TeamMember[]
+  timeSpent: number // in minutes
 }
 
 export interface ProjectData {
@@ -39,7 +62,12 @@ export interface ProjectData {
     centralProblem: string
     context: string
     targetBeneficiaries: string
-    geographicScope: string
+    geographicScope: {
+      state: string
+      district: string
+      block: string
+      cluster: string
+    }
     urgency: string
   }
   stakeholders?: Array<{
@@ -105,12 +133,56 @@ export interface Template {
   defaultData: Partial<ProjectData>
 }
 
+// Organization Level Members
+export interface OrganizationMember {
+  id: string
+  name: string
+  email: string
+  role: "Admin" | "Editor" | "Viewer"
+  status: "active" | "invited"
+  joinedAt: string
+}
+
+
+// Community Forum
+export interface DiscussionReply {
+  id: string
+  discussionId: string
+  author: string
+  avatar: string
+  content: string
+  timestamp: string
+}
+
+export interface Discussion {
+  id: string
+  title: string
+  content: string
+  author: string
+  avatar: string
+  category: "General" | "Best Practices" | "Support" | "Resource Sharing"
+  replies: number
+  likes: number
+  timestamp: string
+  tags: string[]
+  repliesList?: DiscussionReply[]
+}
+
 interface DemoStore {
   user: User | null
   projects: Project[]
   currentProject: Project | null
   isOnboarded: boolean
   badges: string[]
+
+  // Organization Team
+  organizationMembers: OrganizationMember[]
+  inviteOrganizationMember: (email: string, role: OrganizationMember["role"]) => void
+
+  // Community
+  discussions: Discussion[]
+  addDiscussion: (discussion: Omit<Discussion, "id" | "author" | "avatar" | "replies" | "likes" | "timestamp">) => void
+  addDiscussionReply: (discussionId: string, content: string) => void
 
   // Auth actions
   login: (email: string, password: string) => Promise<boolean>
@@ -131,6 +203,11 @@ interface DemoStore {
   // Progress & Gamification
   updateProgress: (projectId: string, step: number) => Promise<void>
   earnBadge: (badgeId: string) => Promise<void>
+
+  // Collaboration Actions
+  addComment: (projectId: string, comment: Omit<Comment, "id" | "createdAt" | "userId" | "userName">) => void
+  inviteTeamMember: (projectId: string, email: string, role: TeamMember["role"]) => void
+  trackTime: (projectId: string, minutes: number) => void
 }
 
 export const TEMPLATES: Template[] = [
@@ -147,7 +224,7 @@ export const TEMPLATES: Template[] = [
         centralProblem: "Low school enrollment and attendance rates among marginalized children",
         context: "",
         targetBeneficiaries: "Children aged 6-14 from marginalized communities",
-        geographicScope: "",
+        geographicScope: { state: "", district: "", block: "", cluster: "" },
         urgency: "high",
       },
     },
@@ -165,7 +242,7 @@ export const TEMPLATES: Template[] = [
         centralProblem: "Poor foundational literacy and numeracy skills among primary school students",
         context: "",
         targetBeneficiaries: "Students in grades 1-5",
-        geographicScope: "",
+        geographicScope: { state: "", district: "", block: "", cluster: "" },
         urgency: "high",
       },
     },
@@ -183,7 +260,7 @@ export const TEMPLATES: Template[] = [
         centralProblem: "Inadequate teaching capacity and pedagogical skills among teachers",
         context: "",
         targetBeneficiaries: "Primary and secondary school teachers",
-        geographicScope: "",
+        geographicScope: { state: "", district: "", block: "", cluster: "" },
         urgency: "medium",
       },
     },
@@ -201,7 +278,7 @@ export const TEMPLATES: Template[] = [
         centralProblem: "Limited access to quality digital learning resources",
         context: "",
         targetBeneficiaries: "Students and teachers in underserved schools",
-        geographicScope: "",
+        geographicScope: { state: "", district: "", block: "", cluster: "" },
         urgency: "medium",
       },
     },
@@ -219,7 +296,7 @@ export const TEMPLATES: Template[] = [
         centralProblem: "Low community and parental involvement in children education",
         context: "",
         targetBeneficiaries: "Parents and community members",
-        geographicScope: "",
+        geographicScope: { state: "", district: "", block: "", cluster: "" },
         urgency: "medium",
       },
     },
@@ -282,6 +359,79 @@ export const useDemoStore = create<DemoStore>()(
       currentProject: null,
       isOnboarded: false,
       badges: [],
+      organizationMembers: [],
+
+      // Initial Seed Data for Community
+      discussions: [
+        {
+          id: "1",
+          title: "Best indicators for Girls' Education programs?",
+          content: "I'm looking for standard indicators...",
+          author: "Elena R.",
+          avatar: "ER",
+          category: "Best Practices",
+          replies: 12,
+          likes: 45,
+          timestamp: "2 hours ago",
+          tags: ["Indicators", "Gender", "Education"]
+        },
+        {
+          id: "2",
+          title: "How to handle 'Assumptions' that turn out to be false mid-project?",
+          content: "We assumed political stability...",
+          author: "David K.",
+          avatar: "DK",
+          category: "Support",
+          replies: 8,
+          likes: 32,
+          timestamp: "5 hours ago",
+          tags: ["Risk Management", "LFA"]
+        },
+        {
+          id: "3",
+          title: "Sharing my template for Teacher Training workshops",
+          content: "Here is a PDF link...",
+          author: "Sarah J.",
+          avatar: "SJ",
+          category: "Resource Sharing",
+          replies: 24,
+          likes: 89,
+          timestamp: "1 day ago",
+          tags: ["Template", "Teachers"]
+        },
+      ],
+
+      addDiscussion: (data) => {
+        const { user } = get()
+        const newDiscussion: Discussion = {
+          id: crypto.randomUUID(),
+          ...data,
+          author: user?.name || "Guest User",
+          avatar: user?.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : "GU",
+          replies: 0,
+          likes: 0,
+          timestamp: "Just now"
+        }
+
+        set((state) => ({
+          discussions: [newDiscussion, ...state.discussions]
+        }))
+      },
+
+      inviteOrganizationMember: (email, role) => {
+        const newMember: OrganizationMember = {
+          id: crypto.randomUUID(),
+          name: email.split('@')[0], // Placeholder name
+          email,
+          role,
+          status: "invited",
+          joinedAt: new Date().toISOString()
+        }
+
+        set((state) => ({
+          organizationMembers: [...state.organizationMembers, newMember]
+        }))
+      },
 
       login: async (email, password) => {
         const res = await fetch(`${API_URL}/auth/login`, {
@@ -292,9 +442,23 @@ export const useDemoStore = create<DemoStore>()(
         const data = await res.json()
         if (!res.ok) throw new Error(data.message)
 
+        const currentUser = { ...data, id: data._id }
+
+        // Initialize organization members with just the current user if empty
+        // In a real app, this would come from the backend organization data
+        const initialMembers: OrganizationMember[] = [{
+          id: currentUser.id,
+          name: currentUser.name,
+          email: currentUser.email,
+          role: "Admin",
+          status: "active",
+          joinedAt: currentUser.createdAt || new Date().toISOString()
+        }]
+
         set({
-          user: { ...data, id: data._id },
+          user: currentUser,
           badges: data.badges || [],
+          organizationMembers: initialMembers
         })
         get().fetchProjects()
         return true
@@ -390,7 +554,17 @@ export const useDemoStore = create<DemoStore>()(
               description,
               templateId,
               organization: user.organization || "My Organization",
-              data: template?.defaultData || {}
+              data: template?.defaultData || {},
+              comments: [], // Initialize empty
+              team: [{ // Add creator as owner
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                role: "owner",
+                status: "active",
+                avatar: user.avatar
+              }],
+              timeSpent: 0
             }),
           })
 
@@ -559,12 +733,85 @@ export const useDemoStore = create<DemoStore>()(
           // Optionally revert state here if strict consistency is needed
         }
       },
+
+      addComment: (projectId, commentData) => {
+        const { user, projects } = get()
+        if (!user) return
+
+        const newComment: Comment = {
+          id: crypto.randomUUID(),
+          userId: user.id,
+          userName: user.name,
+          userAvatar: user.avatar,
+          createdAt: new Date().toISOString(),
+          ...commentData
+        }
+
+        const project = projects.find(p => p.id === projectId)
+        if (!project) return
+
+        const updatedProject = {
+          ...project,
+          comments: [...(project.comments || []), newComment]
+        }
+
+        // Optimistic update
+        set((state) => ({
+          projects: state.projects.map(p => p.id === projectId ? updatedProject : p),
+          currentProject: state.currentProject?.id === projectId ? updatedProject : state.currentProject
+        }))
+
+        // Sync with backend (mocked for now as we don't have this endpoint yet)
+        // In real app: api.post(`/projects/${projectId}/comments`, newComment)
+      },
+
+      inviteTeamMember: (projectId, email, role) => {
+        const { projects } = get()
+        const project = projects.find(p => p.id === projectId)
+        if (!project) return
+
+        const newMember: TeamMember = {
+          id: crypto.randomUUID(), // Mock ID until they register
+          name: email.split('@')[0], // Mock name
+          email,
+          role,
+          status: 'pending'
+        }
+
+        const updatedProject = {
+          ...project,
+          team: [...(project.team || []), newMember]
+        }
+
+        set((state) => ({
+          projects: state.projects.map(p => p.id === projectId ? updatedProject : p),
+          currentProject: state.currentProject?.id === projectId ? updatedProject : state.currentProject
+        }))
+      },
+
+      trackTime: (projectId, minutes) => {
+        const { projects } = get()
+        const project = projects.find(p => p.id === projectId)
+        if (!project) return
+
+        const updatedProject = {
+          ...project,
+          timeSpent: (project.timeSpent || 0) + minutes
+        }
+
+        set((state) => ({
+          projects: state.projects.map(p => p.id === projectId ? updatedProject : p),
+          currentProject: state.currentProject?.id === projectId ? updatedProject : state.currentProject
+        }))
+      }
     }),
     {
       name: "shiksha-raha-demo",
       partialize: (state) => ({
         user: state.user,
         isOnboarded: state.isOnboarded,
+        organizationMembers: state.organizationMembers,
+        discussions: state.discussions,
         // We can persist projects too, but fetching on load is safer for sync
       }),
     },

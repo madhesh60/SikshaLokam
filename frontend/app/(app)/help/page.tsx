@@ -37,7 +37,7 @@ const resources = [
     description: "Complete introduction to the Logical Framework Approach",
     type: "Guide",
     icon: BookOpen,
-    href: "#",
+    href: "/docs/lfa-guide",
   },
   {
     title: "Video Tutorials",
@@ -58,7 +58,7 @@ const resources = [
     description: "Connect with other NGO practitioners",
     type: "Community",
     icon: MessageCircle,
-    href: "#",
+    href: "/community",
   },
 ]
 

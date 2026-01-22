@@ -47,7 +47,7 @@ const iconMap: Record<string, any> = {
   "bar-chart": BarChart3,
 }
 
-const stepComponents: Record<number, React.ComponentType<{ projectId: string }>> = {
+const stepComponents: Record<number, React.ComponentType<{ projectId: string; onNext?: () => void }>> = {
   1: Step1ProblemDefinition,
   2: Step2StakeholderAnalysis,
   3: Step3ProblemTree,
@@ -57,14 +57,24 @@ const stepComponents: Record<number, React.ComponentType<{ projectId: string }>>
   7: Step7MonitoringFramework,
 }
 
+import { CollaborationPanel } from "@/components/app/collaboration-panel"
+
 export default function DesignPage() {
   const router = useRouter()
   const params = useParams()
   const projectId = params.id as string
 
-  const { projects, setCurrentProject, updateProject } = useDemoStore()
+  const { projects, setCurrentProject, updateProject, trackTime } = useDemoStore()
   const [currentStep, setCurrentStep] = useState(1)
   const [isSaving, setIsSaving] = useState(false)
+
+  // Time Tracking: Add 1 minute every 60 seconds while on this page
+  useEffect(() => {
+    const timer = setInterval(() => {
+      trackTime(projectId, 1)
+    }, 60000)
+    return () => clearInterval(timer)
+  }, [projectId, trackTime])
 
   const project = projects.find((p) => p.id === projectId)
 
@@ -180,6 +190,8 @@ export default function DesignPage() {
               <Save className="mr-2 h-3 w-3" />
               {isSaving ? "Saving..." : "Save"}
             </Button>
+
+            <CollaborationPanel projectId={projectId} currentStep={currentStep} />
           </div>
         </div>
 
@@ -229,8 +241,14 @@ export default function DesignPage() {
 
         {/* Step Content */}
         <div className="flex-1 overflow-y-auto rounded-lg border border-border bg-card p-4">
-          {StepComponent ? (
-            <StepComponent projectId={projectId} />
+          {currentStep > 7 ? (
+            <div className="flex flex-col items-center justify-center h-full">
+              <p>Redirecting to review...</p>
+              {/* Force redirect if it lingers */}
+              {void router.push(`/projects/${projectId}/review`)}
+            </div>
+          ) : StepComponent ? (
+            <StepComponent projectId={projectId} onNext={handleNext} />
           ) : (
             <div className="p-4 text-center text-muted-foreground">
               Component for step {currentStep} not found.
