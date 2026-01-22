@@ -749,34 +749,7 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/):
 
 ---
 
-## 🗺️ Roadmap
 
-### Q1 2025
-- ✅ Core LFA methodology implementation
-- ✅ 3D badge system with Three.js
-- ✅ User authentication and project management
-- 🔄 PDF/Excel export functionality
-- 🔄 Mobile responsive design
-
-### Q2 2025
-- 📋 Team collaboration features
-- 📋 Real-time co-editing
-- 📋 Advanced analytics dashboard
-- 📋 AI-powered project recommendations
-
-### Q3 2025
-- 📋 Mobile app (React Native)
-- 📋 Offline mode
-- 📋 Advanced gamification (leaderboards, challenges)
-- 📋 Integration with popular PM tools
-
-### Future
-- 📋 Machine learning for impact prediction
-- 📋 Blockchain for certificate verification
-- 📋 Multi-language support
-- 📋 Government partnership integrations
-
----
 
 ## 📄 License
 
@@ -796,57 +769,13 @@ copies of the Software...
 
 ---
 
-## 👥 Team
 
-<table>
-<tr>
-<td align="center">
-<img src="https://via.placeholder.com/100" width="100px" alt=""/>
-<br />
-<sub><b>Madhesh</b></sub>
-<br />
-<a href="https://github.com/madhesh60">💻</a>
-</td>
-<td align="center">
-<sub><b>Contributors Welcome!</b></sub>
-<br />
-<a href="https://github.com/madhesh60/SikshaLokam/graphs/contributors">👥</a>
-</td>
-</tr>
-</table>
 
----
 
-## 📞 Contact & Support
 
-- **GitHub Issues**: [Report bugs or request features](https://github.com/madhesh60/SikshaLokam/issues)
-- **Email**: support@sikshalokam.org (if applicable)
-- **Documentation**: [Full docs](https://docs.sikshalokam.org) (coming soon)
-- **Community**: [Discord Server](https://discord.gg/sikshalokam) (coming soon)
 
----
 
-## 🙏 Acknowledgments
 
-- **Logical Framework Approach** methodology by USAID and World Bank
-- **Three.js** community for amazing 3D graphics
-- **Radix UI** and **shadcn/ui** for accessible components
-- **Vercel** for Next.js framework
-- All our [contributors](https://github.com/madhesh60/SikshaLokam/graphs/contributors)
-
----
-
-## ⭐ Star History
-
-If you find this project useful, please consider giving it a star! ⭐
-
-<div align="center">
-
-[![Star History Chart](https://api.star-history.com/svg?repos=madhesh60/SikshaLokam&type=Date)](https://star-history.com/#madhesh60/SikshaLokam&Date)
-
-</div>
-
----
 
 <div align="center">
 
