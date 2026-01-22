@@ -41,7 +41,7 @@ const iconMap: Record<string, any> = {
   "bar-chart": BarChart3,
 }
 
-const stepComponents: Record<number, React.ComponentType<{ projectId: string }>> = {
+const stepComponents: Record<number, React.ComponentType<{ projectId: string; onNext?: () => void }>> = {
   1: Step1ProblemDefinition,
   2: Step2StakeholderAnalysis,
   3: Step3ProblemTree,

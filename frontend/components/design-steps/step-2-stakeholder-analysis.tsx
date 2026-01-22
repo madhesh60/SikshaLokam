@@ -15,7 +15,25 @@ import { MicButton } from "@/components/ui/mic-button"
 
 interface Props {
   projectId: string
+  onNext?: () => void
 }
+
+type Stakeholder = NonNullable<ProjectData["stakeholders"]>[number]
+
+// ... (defaultStakeholder and other constants defined in lines 22-40 ommitted for brevity as we are just replacing the top part or function signature)
+// WAIT, replace_file_content needs exact context. I should target the top interface and function definition separately or carefuly.
+
+// Let's replace from interface Props to export function line.
+// Lines 16-18 and 42. It's a bit far apart.
+// I'll do two chunks if possible, or one larger chunk if I include the types.
+// Lines 16 to 42 covers line 20 type, line 22 const, line 30 const, line 36 const. That's too much context to replicate safely without erroring on missing lines.
+
+// I will use replace_file_content for just the Props interface first.
+// Then another for the function signature.
+// Then another for handleComplete.
+
+// Attempt 1: Props interface
+
 
 type Stakeholder = NonNullable<ProjectData["stakeholders"]>[number]
 
@@ -39,7 +57,7 @@ const influenceLevels = [
   { value: "low", label: "Low", color: "bg-green-500/10 text-green-700" },
 ]
 
-export function Step2StakeholderAnalysis({ projectId }: Props) {
+export function Step2StakeholderAnalysis({ projectId, onNext }: Props) {
   const { projects, updateProjectData, updateProgress } = useDemoStore()
   const project = projects.find((p) => p.id === projectId)
 
@@ -96,6 +114,7 @@ export function Step2StakeholderAnalysis({ projectId }: Props) {
 
   const handleComplete = () => {
     updateProgress(projectId, 2)
+    if (onNext) onNext()
   }
 
   const isComplete = stakeholders.length >= 3 && stakeholders.every((s) => s.name && s.interest)
